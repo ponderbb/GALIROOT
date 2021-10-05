@@ -1,0 +1,40 @@
+{
+    "description": "",
+    "tags": [
+        {
+            "id": 111522046,
+            "tagId": 29935290,
+            "name": "visible_stem",
+            "value": null,
+            "labelerLogin": "bbejczy",
+            "createdAt": "2021-09-28T12:57:14.250Z",
+            "updatedAt": "2021-09-28T12:57:14.250Z"
+        }
+    ],
+    "size": {
+        "height": 635,
+        "width": 775
+    },
+    "objects": [
+        {
+            "id": 808482334,
+            "classId": 8320764,
+            "description": "",
+            "geometryType": "point",
+            "labelerLogin": "bbejczy",
+            "createdAt": "2021-09-28T12:57:14.250Z",
+            "updatedAt": "2021-09-28T12:57:14.250Z",
+            "tags": [],
+            "classTitle": "stem",
+            "points": {
+                "exterior": [
+                    [
+                        92,
+                        194
+                    ]
+                ],
+                "interior": []
+            }
+        }
+    ]
+}
