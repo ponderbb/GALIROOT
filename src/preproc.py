@@ -1,8 +1,8 @@
 import cv2
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import albumentations as albu
 
 class preProc():
 
@@ -13,6 +13,7 @@ class preProc():
         self.depth_dir = os.path.join(directory,"depth_imgs")
         self.rgb_dir = os.path.join(directory,"rgb_imgs")
         self.img_count = np.zeros([1,2])
+
 
     def list_files(self, dir, fileformat = ".png"):
         for root, dirs, files in os.walk(dir):
@@ -38,12 +39,26 @@ class preProc():
                 cv2.imwrite(new_filename,img)
             else:
                 raise Exception("Image could not be cathegorized. Check file naming.")
+    
+    def clean_json(self,dir,fileformat = ".json"):
+        for root, dirs, files in os.walk(dir):
+            for name in files:
+                if name.endswith(fileformat):
+
+                    new_name = name.replace('.png','')
+                    os.rename(dir+name, dir+new_name)
+            print("{} files renamed".format(len(files)))
+
+
+
             
 
 def main():
-    directory = "/home/bbejczy/repos/GALIROOT/data"
+    directory = "/home/bbejczy/repos/GALIROOT/data/"
+    annotations = '/home/bbejczy/repos/GALIROOT/data/20200809_skaevinge_labelled/ann_p/'
     pp = preProc(directory)
-    pp.list_files(pp.directory)    
+    # pp.list_files(pp.directory)  
+    pp.clean_json(annotations)
 
 if __name__ == "__main__":
     main()
