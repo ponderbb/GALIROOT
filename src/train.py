@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import transpose
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,6 +8,7 @@ from datasets import load_dataset
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import albumentations as albu
 
 import loader
 from models import Net
@@ -16,15 +18,15 @@ from models import Net
 
 
 # directory definition
-img = '/home/bbejczy/repos/GALIROOT/data/20200809_skaevinge_pruned/img/'
-ann = '/home/bbejczy/repos/GALIROOT/data/20200809_skaevinge_pruned/ann/'
+# img = '/home/bbejczy/repos/GALIROOT/data/20200809_skaevinge_pruned/img/'
+# ann = '/home/bbejczy/repos/GALIROOT/data/20200809_skaevinge_pruned/ann/'
 model_dir = '/home/bbejczy/repos/GALIROOT/models/'
-model_name = 'baseline_v1.pt'
+model_name = 'baseline_v3.pt'
 img_name = Path(model_name).stem+".png"
 
 
 # loading the dataset
-Dataset = loader.KeypointsDataset(img_dir=Path(img), annotations_dir=Path(ann))
+Dataset = loader.KeypointsDataset()
 
 data_load = torch.utils.data.DataLoader(
     Dataset
@@ -95,12 +97,6 @@ def train_net(n_epochs):
 
             training_loss.append(running_loss)
 
-        # # plot the accuracy
-        # index = np.arange(len(data_load))
-        # plt.figure()
-        # plt.plot(index, running_loss, 'r')
-        # plt.legend(['Train Accucary'])
-        # plt.xlabel('Updates'), plt.ylabel('Acc')
 
     print('Finished Training')
     return training_loss

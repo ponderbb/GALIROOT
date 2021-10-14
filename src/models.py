@@ -35,9 +35,10 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(512, 1*2)
         # output should correspond to desired amount of keypoints (x,y)
 
-        self.dropout = nn.Dropout(p=0.25)
+        self.dropout = nn.Dropout(p=0.30)
 
     def forward(self, x):
+        x = x.permute(0,3,1,2)
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
@@ -52,7 +53,7 @@ class Net(nn.Module):
         x = self.dropout(x)
         x = F.relu(self.fc2(x))
         x = self.dropout(x)
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
 
         return x
 
@@ -60,7 +61,7 @@ class Net(nn.Module):
 
 if __name__ == "__main__":
 
-    x = torch.randn(1,3,635,775) # testing the output
+    x = torch.randn(1,3,256,256) # testing the output
 
     net = Net()
 
