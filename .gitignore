@@ -4,7 +4,6 @@ models/
 *.code-workspace
 data/
 .vscode/
-clutter/
 
 
 # Byte-compiled / optimized / DLL files

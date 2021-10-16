@@ -51,6 +51,7 @@ class KeypointsDataset(Dataset):
         else:
             kp_raw = ann_file['objects'][0]['points']['exterior'][0]
             keypoints = [(kp_raw[0],kp_raw[1])] # convert from list to tuple
+            print(keypoints)
             image = cv2.imread(self.images[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             transformed = transform(image=image, keypoints=keypoints)

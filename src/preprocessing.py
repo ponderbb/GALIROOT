@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.model_selection import  StratifiedShuffleSplit
-
+import random
 
 
 class preProcessing():
@@ -103,10 +103,10 @@ class preProcessing():
             cv2.circle(image, (int(x), int(y)), diameter, (0, 255, 0), -1)
 
         cv2.imshow('image',image)
-        cv2.waitKey(1000)
+        cv2.waitKey(3000)
 
 
-    def augmentations(self, img_dir, ann_dir):
+    def augmentations(self, img_dir, ann_dir): # TODO: remove this from here, just for show
 
 
         img_list = self.list_files(img_dir,self.settings["image_format"])
@@ -157,15 +157,27 @@ class preProcessing():
     #     print(count)
 
     @staticmethod
-    def train_test_split(img_dir, ann_dir, train_size = 0.8):
+    def train_test_split(img_dir, ann_dir, train_size = 0.85): #FIXME: this is horrible, but I am really tired
 
-        img_list = preProcessing.list_files(img_dir, '.png')
-        ann_list = preProcessing.list_files(ann_dir, '.json')
-        name_list =[]
-        for name in ann_list:
-            name_stem = Path(name).stem
-            # print(name_stem)
-            name_list.append(name_stem)
+        img_list = sorted(preProcessing.list_files(img_dir, '.png'))
+        ann_list = sorted(preProcessing.list_files(ann_dir, '.json'))
+
+        try:
+            os.mkdir(str(Path(img_list[0]).parents[0])+'/test/')
+            os.mkdir(str(Path(ann_list[0]).parents[0])+'/test/')
+        except OSError:
+            pass
+
+        test_path_img = str(Path(img_list[0]).parents[0])+'/test/'
+        test_path_ann = str(Path(ann_list[0]).parents[0])+'/test/'
+
+
+        num_test_sample = int(np.round(len(img_list)*(1-train_size)))
+        test_set_idx = random.sample(range(len(img_list)), num_test_sample)
+
+        for idx in test_set_idx:
+            shutil.move(img_list[idx], test_path_img+str(Path(img_list[idx]).name))
+            shutil.move(ann_list[idx], test_path_ann+str(Path(ann_list[idx]).name))
 
 
 
@@ -181,16 +193,11 @@ def main():
     # preProcessing.clean_json(pp.settings['annotations'], pp.settings['annotation_format'])
     # pp.ann_list = preProcessing.list_files(pp.settings['annotations'],pp.settings['annotation_format'])
 
-
-    # print(len(pp.list_files()))
-    # print(pp.p_d_list[0])
-    # print(pp.p_rgb_list[0])
     # pp.augmentations(pp.l515_rgb, pp.settings['annotations'])
-    # pp.augmentations('/home/bbejczy/repos/GALIROOT/data/test_set/img/', pp.settings['annotations'])
-    # pp.annotations = preProcessing.list_files(pp.settings['annotations'],pp.settings['annotation_format'])
-    # print(pp.ann_list)
+    pp.augmentations('/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/img', '/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/ann')
 
-    preProcessing.train_test_split('/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 (copy)/img/','/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 (copy)/ann/', train_size=0.8)
+
+    # preProcessing.train_test_split('/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 (copy)/img/','/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 (copy)/ann/')
 
 
 

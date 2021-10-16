@@ -1,6 +1,6 @@
 {
-    "images": "/home/bbejczy/repos/GALIROOT/data/test_set/img/",
-    "annotations": "/home/bbejczy/repos/GALIROOT/data/test_set/ann/",
+    "images": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/img/",
+    "annotations": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/ann/",
     "image_format": ".png",
     "annotation_format": ".json",
     "ROI": {
