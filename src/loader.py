@@ -1,23 +1,3 @@
-from numpy.core.fromnumeric import transpose
-
-from typing import Optional
-from pathlib import Path
-from PIL import Image
-
-from torch.utils.data import Dataset
-from torchvision import datasets, transforms, utils
-from torchvision.transforms import ToTensor
-import matplotlib.pyplot as plt
-import numpy as np
-import albumentations as A
-import cv2
-import os
-from albumentations.pytorch import ToTensorV2
-
-from pre_processing import preProcessing
-
-# TODO:clean out imports
-
 import json
 import utils
 import albumentations as A
@@ -28,10 +8,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-
-
 class KeypointsDataset(Dataset):
-
     '''
     Loader for supervisely based dataset
     '''
