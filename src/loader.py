@@ -1,6 +1,5 @@
 from numpy.core.fromnumeric import transpose
-import torch 
-import json
+
 from typing import Optional
 from pathlib import Path
 from PIL import Image
@@ -15,78 +14,119 @@ import cv2
 import os
 from albumentations.pytorch import ToTensorV2
 
-from preprocessing import preProcessing
+from pre_processing import preProcessing
+
+# TODO:clean out imports
+
+import json
+import utils
+import albumentations as A
+import cv2
+from matplotlib import pyplot as plt
+
+import torch
+from torch.utils.data import Dataset
+
+
 
 
 class KeypointsDataset(Dataset):
-    def __init__(self):
-        self.settings_location = '/home/bbejczy/repos/GALIROOT/config/dataset.json'
-        self.settings = self.open_settings()
-        self.annotations = self.list_files(self.settings['annotations'], self.settings['annotation_format']) #might not be needed
-        self.images = self.list_files(self.settings['images'], self.settings['image_format'])
+
+    '''
+    Loader for supervisely based dataset
+    '''
+
+    def __init__(self, config_file, transform=None):
+        self.config = utils.open_config(config_file)
+        self.iftransform = transform
+        self.transform = A.load(self.config['aug_pipeline'])
+        self.annotations_list, __ = utils.list_files(self.config['annotations'], self.config['annotation_format'])
+        self.images_list, __ = utils.list_files(self.config['images'], self.config['image_format'])
 
     def __len__(self):
-        return len(self.images)
+        return len(self.images_list)
 
     def __getitem__(self, idx):
-
-        # read ROI from json
-        x = self.settings['ROI']['x']
-        y = self.settings['ROI']['y']
-
-        # define augmentation pipeline
-        transform = A.Compose([
-            A.Normalize(mean=0, std=1),
-            A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]),
-            A.Resize(height = self.settings['size']['height'], width = self.settings['size']['width']),
-            # ToTensorV2() # might not be needed?
-        ],
-        keypoint_params=A.KeypointParams(format='xy')
-        )
-
-        with open(self.annotations[idx],"r") as j:
-            ann_file = json.load(j)
-        if not ann_file['objects']:
+        with open(self.annotations_list[idx],"r") as j:
+            annotation = json.load(j)
+        if not annotation['objects']:
             raise Exception
         else:
-            kp_raw = ann_file['objects'][0]['points']['exterior'][0]
-            keypoints = [(kp_raw[0],kp_raw[1])] # convert from list to tuple
-            print(keypoints)
-            image = cv2.imread(self.images[idx])
+            kp_raw = annotation['objects'][0]['points']['exterior'][0]
+            keypoints = [(kp_raw[0],kp_raw[1])] # tuple wrapped in a list
+            image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            transformed = transform(image=image, keypoints=keypoints)
 
-            return transformed
+            # print("Pre-transform keypoint {} and image shape: {}".format(keypoints, image.shape))
+            data = {"image":image, "keypoints":keypoints}
 
-    def open_settings(self):
-        with open(self.settings_location) as j:
-            settings = json.load(j)
-        return settings
+            if self.iftransform:
+                data = self.transform(image=data['image'], keypoints=data['keypoints'])
+                # print("Post-transform keypoint {} and image shape: {}".format(data['keypoints'], data['image'].shape))
 
-    @staticmethod
-    def list_files(directory, fileformat):
-        img_list = []
-        for root, dirs, files in os.walk(directory):
-            for name in files:
-                if name.endswith(fileformat):
-                    img_list.append(os.path.join(root, name))
-        return img_list
+            return data
 
+
+def generate_transform_json(config):
+
+    '''
+    Generate albumentations pipeline json file.
+    TODO: implement functionality for specifying the albumentations added to the pipeline
+    '''
+
+    config_json = utils.open_config(config)
+
+    # read ROI from json
+    x = config_json['ROI']['x']
+    y = config_json['ROI']['y']
+
+    # define augmentation pipeline
+    transform = A.Compose([
+        A.Normalize(mean=0, std=1),
+        A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]),
+        A.Resize(height = config_json['size']['height'], width = config_json['size']['height']),
+    ],
+    keypoint_params=A.KeypointParams(format='xy')
+    )
+
+    A.save(transform, config_json['aug_pipeline'])
+
+def vis_keypoints(image, keypoints, color=(0, 255, 0), diameter=10):
+
+    '''
+    Visualizing keypoints on images.
+    '''
+
+    image = image.detach().numpy().squeeze().copy()
+
+    for (x, y) in keypoints:
+        cv2.circle(image, (int(x), int(y)), diameter, color, -1)
+        
+    plt.figure(figsize=(32, 32))
+    plt.axis('off')
+    plt.imshow((image*256).astype('uint8'))
+    plt.show()
 
 def main():
 
-    dataset = KeypointsDataset()
+    ### UNIT TEST
+
+    config = '/home/bbejczy/repos/GALIROOT/config/dataset.json'
+
+    generate_transform_json(config)
+
+    dataset = KeypointsDataset(config, transform=True)
 
     data_load = torch.utils.data.DataLoader(
         dataset
     )
 
+    # For visualization
+
     for idx, data in enumerate(data_load):
-        images = data['image']
-        key_pts = data['keypoints']
-
-        print(images.shape, key_pts)
-
+        image = data['image']
+        keypoints = data['keypoints']
+        vis_keypoints(image, keypoints)
 
 if __name__ == "__main__":
     main()

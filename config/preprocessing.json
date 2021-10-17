@@ -1,20 +1,6 @@
 {
-    "directory": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/img",
-    "annotations": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/ann/",
+    "directory": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 copy/img",
+    "annotations": "/home/bbejczy/repos/GALIROOT/data/l515_lab_1410 copy/ann/",
     "image_format": ".png",
-    "annotation_format": ".json",
-    "ROI": {
-        "x": [
-                345,
-                1120
-        ],
-        "y": [
-                365,
-                1000
-        ]
-    },
-    "size": {
-        "height": 256,
-        "width": 256
-    }
+    "annotation_format": ".json"
 }

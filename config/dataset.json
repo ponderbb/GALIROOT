@@ -16,5 +16,8 @@
     "size": {
         "height": 256,
         "width": 256
-    }
+    },
+    "transforms": "",
+    "aug_pipeline": "/home/bbejczy/repos/GALIROOT/config/baseline_augp.json"
+
 }
