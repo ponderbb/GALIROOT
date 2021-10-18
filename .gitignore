@@ -4,6 +4,7 @@ models/
 *.code-workspace
 data/
 .vscode/
+src/runs/
 
 
 # Byte-compiled / optimized / DLL files

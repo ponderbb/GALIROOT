@@ -1,5 +1,7 @@
 import json
 import os
+import matplotlib.pyplot as plt #TODO: remove plotting unit test
+# import numpy as np
 
 def open_config(path):
     with open(path) as j:
@@ -15,3 +17,22 @@ def list_files(directory, fileformat):
                 path_list.append(os.path.join(root, name))
                 name_list.append(name)
     return sorted(path_list), sorted(name_list)
+
+def create_file(path):
+    try:
+        open(path, 'w').close()
+    except OSError:
+        print('Failed creating the file')
+    else:
+        print('File created')
+
+def plot_losses(train_losses, val_losses, epoch, figure, name):
+    plt.figure(figsize=(10,5))
+    plt.title("Training and Validation Loss for {}".format(name))
+    plt.plot(range(epoch), val_losses,label="val")
+    plt.plot(range(epoch), train_losses,label="train")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.savefig(figure)
+

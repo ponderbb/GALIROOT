@@ -1,11 +1,17 @@
 import json
+
+from torch import random
 import utils
 import albumentations as A
+from albumentations.pytorch.transforms import ToTensorV2
+
 import cv2
 from matplotlib import pyplot as plt
+import numpy as np
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, random_split
+
 
 
 class KeypointsDataset(Dataset):
@@ -29,8 +35,8 @@ class KeypointsDataset(Dataset):
         if not annotation['objects']:
             raise Exception
         else:
-            kp_raw = annotation['objects'][0]['points']['exterior'][0]
-            keypoints = [(kp_raw[0],kp_raw[1])] # tuple wrapped in a list
+            kp_raw = annotation['objects'][0]['points']['exterior'][0] # FIXME: change here to get mupltipoints in
+            keypoints = [(kp_raw[0],kp_raw[1])] # tuple wrapped in a list # FIXME: albumentations weird in format
             image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -40,8 +46,27 @@ class KeypointsDataset(Dataset):
             if self.iftransform:
                 data = self.transform(image=data['image'], keypoints=data['keypoints'])
                 # print("Post-transform keypoint {} and image shape: {}".format(data['keypoints'], data['image'].shape))
-
+                data['keypoints']= torch.div(torch.from_numpy(np.asarray(data['keypoints'])),256)
             return data
+
+    @staticmethod
+    def train_valid_split(config_file, train_ratio=0.81):
+
+        '''
+        Create a validation and a test set from the processed data.
+        TODO: might me more effitient way of sharing variables such as config
+        '''
+
+        dataset = KeypointsDataset(config_file, transform=True)
+
+        data_length = len(dataset.images_list)
+        train_length = round(data_length*train_ratio)
+
+        train_set, val_set = random_split(dataset,[train_length, data_length-train_length])
+
+        print("Training set: {}\nValidation set: {}".format(len(train_set), len(val_set)))
+
+        return train_set, val_set
 
 
 def generate_transform_json(config):
@@ -62,48 +87,53 @@ def generate_transform_json(config):
         A.Normalize(mean=0, std=1),
         A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]),
         A.Resize(height = config_json['size']['height'], width = config_json['size']['height']),
+        ToTensorV2(always_apply=True)
     ],
     keypoint_params=A.KeypointParams(format='xy')
     )
 
     A.save(transform, config_json['aug_pipeline'])
 
-def vis_keypoints(image, keypoints, color=(0, 255, 0), diameter=10):
+def vis_keypoints(image, keypoints, prediction=None, diameter=5):
 
     '''
     Visualizing keypoints on images.
+    
+    # FIXME: might not work due to converting to tensors before the dataloader
+
     '''
+    image = image.squeeze().permute(1,2,0).numpy().copy()*256 # get it back from the normalized state
 
-    image = image.detach().numpy().squeeze().copy()
+    keypoints = keypoints.detach().numpy()
+    prediction = prediction.detach().numpy()
 
-    for (x, y) in keypoints:
-        cv2.circle(image, (int(x), int(y)), diameter, color, -1)
+    for idx in keypoints[0]:
+        cv2.circle(image, (int(idx[0]), int(idx[1])), diameter, (255,0,0), -1)
+    if prediction is not None:
+        for idx in prediction:
+            cv2.circle(image, (int(idx[0]), int(idx[1])), diameter, (0,255,255), -1)
         
-    plt.figure(figsize=(32, 32))
+    plt.figure(figsize=(16, 16))
     plt.axis('off')
-    plt.imshow((image*256).astype('uint8'))
+    plt.imshow((image).astype('uint8'))
     plt.show()
 
-def main():
+# def main():
 
-    ### UNIT TEST
+#     ### UNIT TEST
 
-    config = '/home/bbejczy/repos/GALIROOT/config/dataset.json'
+#     config = '/zhome/3b/d/154066/repos/GALIROOT/config/gbar_1_dataset.json'
+#     # generate_transform_json(config)
+#     dataset = KeypointsDataset(config, transform=True)
+#     data_load = torch.utils.data.DataLoader(
+#         dataset
+#     )
+#     # For visualization
+#     for idx, data in enumerate(data_load):
+#         image = data['image']
+#         keypoints = data['keypoints']
+#         vis_keypoints(image, keypoints)
+#     train_set, val_set = KeypointsDataset.train_valid_split(config)
 
-    generate_transform_json(config)
-
-    dataset = KeypointsDataset(config, transform=True)
-
-    data_load = torch.utils.data.DataLoader(
-        dataset
-    )
-
-    # For visualization
-
-    for idx, data in enumerate(data_load):
-        image = data['image']
-        keypoints = data['keypoints']
-        vis_keypoints(image, keypoints)
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
