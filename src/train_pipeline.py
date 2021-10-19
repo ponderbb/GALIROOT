@@ -4,6 +4,8 @@ from models import SelfNet
 # import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+import pickle
+import os
 
 import torch
 import torch.nn as nn
@@ -20,25 +22,47 @@ print("Running GPU.") if use_cuda else print("No GPU available.")
 # loading configurations 
 train_config = utils.open_config('/zhome/3b/d/154066/repos/GALIROOT/config/train_config.json')
 data_config = '/zhome/3b/d/154066/repos/GALIROOT/config/gbar_1_dataset.json'
+data_config_opened = utils.open_config(data_config)
+
 # create model file 
 utils.create_file(train_config['model_folder']+train_config['model_name'])
+
 # config Tensorboard
 writer = SummaryWriter()
 print("Configurations loaded.")
 
 # loading the dataset
-print("Loading the dataset.")
-dataset = loader.KeypointsDataset(data_config, transform=True)
-print("Dataset loaded.")
-train_set, val_set = loader.KeypointsDataset.train_valid_split(data_config)
 
-train_load = torch.utils.data.DataLoader(train_set, batch_size = 4, shuffle=True) # TODO: figure out how to use the batch size
-valid_load = torch.utils.data.DataLoader(val_set, batch_size = 4, shuffle=True)
+print("Loading the dataset.")
+if len(os.listdir(data_config_opened['pickle_pipeline']))==0:
+    loader.KeypointsDataset(data_config, transform=True, generate_pickle=True)
+    print('New pickle generated.')
+# Load the data from a pickle file for reproducability
+with open(data_config_opened['pickle_pipeline'] + 'train_set.pickle', 'rb') as f:
+    train_set = pickle.load(f)
+with open(data_config_opened['pickle_pipeline'] + 'valid_set.pickle', 'rb') as f:
+    val_set = pickle.load(f)
+
+
+train_load = torch.utils.data.DataLoader(train_set, batch_size = 6, shuffle=True)
+valid_load = torch.utils.data.DataLoader(val_set, batch_size = 6, shuffle=True)
 print("Train and validation split loaded.")
 
-# # verifying the loading
-# for idx, samples in enumerate(train_load):
-#     print(samples['image'].shape)
+# # calculate mean kp
+# sum_kp = torch.zeros(2,2)
+# for idx, data in enumerate(train_load):
+#     keypoints = torch.mul(data['keypoints'],256).squeeze(1)
+#     sum_kp = sum_kp.add(keypoints)
+# mean_kp = sum_kp/len(train_load)
+# print("Mean train keypoint: {}".format(mean_kp))
+
+# # calculate mean kp for valid
+# sum_kp_val = torch.zeros(2,2)
+# for idx, data in enumerate(valid_load):
+#     keypoints = torch.mul(data['keypoints'],256).squeeze(1)
+#     sum_kp_val = sum_kp_val.add(keypoints)
+# mean_kp_val = sum_kp_val/len(valid_load)
+# print("Mean valid keypoint: {}".format(mean_kp_val))
 
 # Initialize network model
 net = SelfNet()
@@ -111,6 +135,8 @@ def train(epochs, net, train_load, valid_load, criterion, optimizer): # FIXME: w
             min_valid_loss = valid_loss
             # Saving State Dict
             torch.save(net.state_dict(), train_config['model_folder']+train_config['model_name'])
+    
+    torch.save(net.state_dict(), train_config['model_folder']+train_config['end_model_name'])
 
     return train_loss_list, valid_loss_list
 

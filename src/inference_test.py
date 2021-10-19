@@ -1,6 +1,8 @@
 #%%
 import loader
 import random
+from matplotlib import pyplot as plt
+import cv2
 
 from models import SelfNet
 
@@ -23,16 +25,36 @@ def main(): # TODO: clean up inference and creat config
     # load model
     model = SelfNet()
     model.eval()
-    model.load_state_dict(torch.load('/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b2_sf0_wd.pt',map_location='cpu'))
+    model.load_state_dict(torch.load('/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b2_1.pt',map_location='cpu'))
     
     # For visualization
+ 
+    # for idx, data in enumerate(data_load):
 
+    #     image = data['image']
+    #     keypoints = torch.mul(data['keypoints'],256)
+    #     prediction = torch.mul(model(image), 256)
+
+    #     loader.vis_keypoints(image, keypoints, prediction)
+    sum_kp = torch.zeros(2)
+    name = 'Batchsize 2'
+    plt.figure(figsize=(64,32))
+    plt.title(name)
     for idx, data in enumerate(data_load):
+        plt.subplot(2,5,idx+1)
+        plt.axis('off')
         image = data['image']
         keypoints = torch.mul(data['keypoints'],256)
-        pred_raw = model(image)
-        prediction = torch.mul(pred_raw, 256)
-        loader.vis_keypoints(image, keypoints, prediction)
+        sum_kp = sum_kp.add(keypoints)
+        prediction = torch.mul(model(image), 256)
+        print(prediction)
+
+        image_copy = loader.vis_keypoints(image, keypoints, prediction, plot=False)
+        plt.imshow(image_copy)
+
+    mean_kp = sum_kp/len(data_load)
+
+    plt.savefig('/zhome/3b/d/154066/repos/GALIROOT/data/Inference/{}.png'.format(name))
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 {
     "model_folder": "/zhome/3b/d/154066/repos/GALIROOT/models/",
-    "model_name": "baseline_b4_sf1_wd.pt",
-    "plot": "/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b4_sf1_wd.png"
+    "model_name": "baseline_b6_1.pt",
+    "end_model_name": "ebaseline_b6_1.pt",
+    "plot": "/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b6_1.png"
 }
