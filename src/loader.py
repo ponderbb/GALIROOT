@@ -103,8 +103,8 @@ def generate_transform_json(config):
 
     # define augmentation pipeline
     transform = A.Compose([
-        A.Normalize(mean=0, std=1),
         A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]),
+        A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]),
         A.Resize(height = config_json['size']['height'], width = config_json['size']['height']),
         ToTensorV2(always_apply=True)
     ],

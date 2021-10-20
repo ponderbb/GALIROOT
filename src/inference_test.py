@@ -25,7 +25,7 @@ def main(): # TODO: clean up inference and creat config
     # load model
     model = SelfNet()
     model.eval()
-    model.load_state_dict(torch.load('/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b2_1.pt',map_location='cpu'))
+    model.load_state_dict(torch.load('../models/baseline_b2_1.pt',map_location='cpu'))
     
     # For visualization
  
@@ -54,7 +54,7 @@ def main(): # TODO: clean up inference and creat config
 
     mean_kp = sum_kp/len(data_load)
 
-    plt.savefig('/zhome/3b/d/154066/repos/GALIROOT/data/Inference/{}.png'.format(name))
+    plt.savefig('../data/inference/{}.png'.format(name)) #TODO: this into a config
 
 if __name__ == "__main__":
     main()
