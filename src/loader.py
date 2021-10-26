@@ -104,6 +104,7 @@ def generate_transform_json(config):
     # define augmentation pipeline
     transform = A.Compose([
         A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]),
+        # A.Normalize(mean=0, std=1),
         A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]),
         A.Resize(height = config_json['size']['height'], width = config_json['size']['height']),
         ToTensorV2(always_apply=True)
@@ -130,7 +131,7 @@ def vis_keypoints(image, keypoints, prediction=None, plot=True):
         cv2.circle(image_copy, (int(idx[0]), int(idx[1])), 5, (255,0,0), -1)
     if prediction is not None:
         for idx in prediction:
-            cv2.circle(image_copy, (int(idx[0]), int(idx[1])), 5, (0,255,255), -1)
+            cv2.circle(image_copy, (int(idx[0]), int(idx[1])), 5, (0,0,0), -1)
     
     if plot:
         plt.figure(figsize=(16, 16))
@@ -145,7 +146,7 @@ def main():
     ### UNIT TEST
 
     config = '/zhome/3b/d/154066/repos/GALIROOT/config/gbar_1_dataset.json'
-    # # generate_transform_json(config)
+    # generate_transform_json(config)
     # dataset = KeypointsDataset(config, transform=True)
     # data_load = torch.utils.data.DataLoader(
     #     dataset

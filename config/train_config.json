@@ -1,6 +1,5 @@
 {
     "model_folder": "/zhome/3b/d/154066/repos/GALIROOT/models/",
-    "model_name": "baseline_b6_1.pt",
-    "end_model_name": "ebaseline_b6_1.pt",
-    "plot": "/zhome/3b/d/154066/repos/GALIROOT/models/baseline_b6_1.png"
+    "model_name": "selfnet_b6_norm.pt",
+    "plot": "/zhome/3b/d/154066/repos/GALIROOT/models/selfnet_b6_norm.png"
 }

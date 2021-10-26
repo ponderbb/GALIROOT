@@ -1,0 +1,24 @@
+{
+    "folders": {
+        "images": "../data/",
+        "annotations": "../data/",
+        "augmentations": "/augmentation/",
+        "save_state": "../models/",
+        "training_graph": "../models/graph"
+    },
+
+    "processing": {
+        "augmentation": "name",
+        "train_ratio": "0.8",
+        "seeding": "42"
+    },
+
+    "training": { 
+        "model": "name",
+        "loss": "name",
+        "optim": "name",
+        "optim_lr": "learning_rate",
+        "optim_wd": "weight_decay",
+        "epochs": "100"
+    }
+}

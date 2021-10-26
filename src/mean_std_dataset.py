@@ -19,7 +19,7 @@ class Transforms:
 
 if __name__ == "__main__":
 
-    data_path ="../data/l515_lab_1410/img"
+    data_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/img//"
 
     # Train dataset
     a_transform = A.Compose([

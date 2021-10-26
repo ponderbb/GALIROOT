@@ -1,10 +1,9 @@
-#%%
 import loader
 import random
 from matplotlib import pyplot as plt
 import cv2
 
-from models import SelfNet
+from models import SelfNet, SimpleNet
 
 import torch
 
@@ -25,7 +24,7 @@ def main(): # TODO: clean up inference and creat config
     # load model
     model = SelfNet()
     model.eval()
-    model.load_state_dict(torch.load('../models/baseline_b2_1.pt',map_location='cpu'))
+    model.load_state_dict(torch.load('../models/selfnet_b6_norm.pt',map_location='cpu'))
     
     # For visualization
  
@@ -37,7 +36,7 @@ def main(): # TODO: clean up inference and creat config
 
     #     loader.vis_keypoints(image, keypoints, prediction)
     sum_kp = torch.zeros(2)
-    name = 'Batchsize 2'
+    name = 'SelfNet with norm'
     plt.figure(figsize=(64,32))
     plt.title(name)
     for idx, data in enumerate(data_load):

@@ -1,6 +1,7 @@
+from torch.nn.modules import loss
 import utils
 import loader
-from models import SelfNet
+from models import SelfNet, SimpleNet, loss_list
 # import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -72,7 +73,10 @@ if use_cuda:
 print(net)
 print("\nNetwork is loaded")
 
-criterion = nn.MSELoss()
+
+
+criterion = loss_list[0]
+print(criterion)
 optimizer = optim.Adam(net.parameters(), lr = 1e-4, weight_decay=1e-6)
 
 print('\nTraining loop has started.\n')
@@ -90,7 +94,7 @@ def train(epochs, net, train_load, valid_load, criterion, optimizer): # FIXME: w
         train_loss = 0.0
         net.train()
 
-        for data in train_load:
+        for data in train_load: # FIXME: load alrady as cuda
             if use_cuda:
                 image = data['image'].cuda()
                 keypoints = data['keypoints'].squeeze().cuda()
@@ -131,12 +135,10 @@ def train(epochs, net, train_load, valid_load, criterion, optimizer): # FIXME: w
         writer.close()
 
         if min_valid_loss > valid_loss:
-            print(f'Validation Loss Decreased({min_valid_loss:.6f}--->{valid_loss:.6f}) \t Saving The Model')
+            print(f'Validation Loss Decreased({min_valid_loss:.6f}--->{valid_loss:.6f}) \t Saving The Model') # valid_loss -> average validation loss
             min_valid_loss = valid_loss
             # Saving State Dict
             torch.save(net.state_dict(), train_config['model_folder']+train_config['model_name'])
-    
-    torch.save(net.state_dict(), train_config['model_folder']+train_config['end_model_name'])
 
     return train_loss_list, valid_loss_list
 

@@ -1,7 +1,6 @@
 import json
 import os
-import matplotlib.pyplot as plt #TODO: remove plotting unit test
-# import numpy as np
+import matplotlib.pyplot as plt
 
 def open_config(path):
     with open(path) as j:
