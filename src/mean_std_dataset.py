@@ -10,7 +10,7 @@ import numpy as np
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-class Transforms:
+class Transforms: # TODO: add this to loader pipeline
     def __init__(self, transforms: A.Compose):
         self.transforms = transforms
 
@@ -19,7 +19,7 @@ class Transforms:
 
 if __name__ == "__main__":
 
-    data_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/img//"
+    data_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/img/"
 
     # Train dataset
     a_transform = A.Compose([

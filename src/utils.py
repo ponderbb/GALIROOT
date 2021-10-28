@@ -1,6 +1,11 @@
 import json
 import os
 import matplotlib.pyplot as plt
+import numpy as np
+
+import torch
+
+''' GENERAL FUNCTIONS '''
 
 def open_config(path):
     with open(path) as j:
@@ -34,4 +39,10 @@ def plot_losses(train_losses, val_losses, epoch, figure, name):
     plt.ylabel("Loss")
     plt.legend()
     plt.savefig(figure)
+
+def normalize_keypoints(keypoints, scale):
+    return torch.div(torch.from_numpy(np.asarray(keypoints)),scale)
+
+def index_with_list(list, index):
+    return [list[i] for i in index]
 

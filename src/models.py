@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.nn.init as I # for weight initialization
 import numpy as np
 
-loss_list = [nn.MSELoss(), nn.L1Loss()]
+# loss_list = [nn.MSELoss(), nn.L1Loss()]
 
 class SelfNet(nn.Module):
 

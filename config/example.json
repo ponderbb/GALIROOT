@@ -1,16 +1,33 @@
 {
     "folders": {
-        "images": "../data/",
-        "annotations": "../data/",
-        "augmentations": "/augmentation/",
-        "save_state": "../models/",
-        "training_graph": "../models/graph"
+        "images": "../data/l515_lab_1410/img/",
+        "annotations": "../data/l515_lab_1410/ann/",
+        "augmentations": "../config/augmentations/",
+        "save_checkpoint": "../models/checkpoint/",
+        "save_graph": "../models/train_graph/",
+        "save_inference": "../models/inference/"
     },
 
     "processing": {
-        "augmentation": "name",
-        "train_ratio": "0.8",
-        "seeding": "42"
+        "reuse": true,
+        "load_aug":"base1.json",
+        "add_augmentation":{
+            "normalization":true
+        },
+        "generate_aug_json":false,
+        "aug_json_name": "base1.json",
+        "format_img": ".png",
+        "format_ann": ".json",
+        "ROI": {
+            "x": [345,1120],
+            "y": [365,1000]
+        },
+        "size": {
+            "height": 256,
+            "width": 256
+        },
+        "train_ratio": 0.81,
+        "seeding": 42
     },
 
     "training": { 
@@ -19,6 +36,7 @@
         "optim": "name",
         "optim_lr": "learning_rate",
         "optim_wd": "weight_decay",
-        "epochs": "100"
+        "epochs": 100,
+        "kfold": 10
     }
 }

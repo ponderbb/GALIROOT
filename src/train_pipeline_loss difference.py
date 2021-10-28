@@ -57,6 +57,14 @@ if use_cuda:
 print(net)
 print("\nNetwork is loaded")
 
+
+def normal_dist(x , mean , sd):
+    x = x.detach().cpu()
+    mean = mean.detach().cpu()
+    prob_density = 1/(sd*np.sqrt(2*np.pi))* np.exp(-0.5*((x-mean)/sd)**2)
+    return prob_density
+
+
 criterion = loss.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr = 1e-4, weight_decay=1e-6)
 
@@ -87,6 +95,8 @@ def train(epochs, net, train_load, valid_load, criterion, optimizer): # FIXME: w
             optimizer.zero_grad()
             prediction = net(image)
             loss = criterion(prediction, keypoints)
+            # loss = torch.mean(torch.cdist(prediction, keypoints)**2)
+            # prob = normal_dist(prediction, keypoints, 10/256)
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
@@ -104,6 +114,7 @@ def train(epochs, net, train_load, valid_load, criterion, optimizer): # FIXME: w
             
             prediction = net(image)
             loss(prediction, keypoints)
+            # loss = torch.mean(torch.cdist(prediction, keypoints)**2)
             valid_loss = loss.item()*image.size(0)
     
         print(f'Epoch {e+1} \t\t Training Loss: {train_loss / len(train_load)} \t\t Validation Loss: {valid_loss / len(valid_load)}')

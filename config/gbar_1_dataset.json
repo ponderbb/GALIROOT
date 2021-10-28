@@ -18,6 +18,6 @@
         "width": 256
     },
     "transforms": "",
-    "aug_pipeline": "/zhome/3b/d/154066/repos/GALIROOT/config/baseline_augp.json",
-    "pickle_pipeline": "/zhome/3b/d/154066/repos/GALIROOT/data/pickle_jar/"
+    "aug_pipeline": "/zhome/3b/d/154066/repos/GALIROOT/config/augmentations/baseline_augp.json",
+    "pickle_pipeline": "/zhome/3b/d/154066/repos/GALIROOT/data/jar/"
 }

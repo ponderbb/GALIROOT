@@ -1,4 +1,4 @@
-import loader
+import backup_loader
 import random
 from matplotlib import pyplot as plt
 import cv2
@@ -12,7 +12,7 @@ import torch
 def main(): # TODO: clean up inference and creat config
 
     config = '/zhome/3b/d/154066/repos/GALIROOT/config/gbar_1_dataset.json'
-    dataset = loader.KeypointsDataset(config, transform=True)
+    dataset = backup_loader.KeypointsDataset(config, transform=True)
     index = random.sample(range(111),10)
     # print(index)
 
@@ -24,7 +24,7 @@ def main(): # TODO: clean up inference and creat config
     # load model
     model = SelfNet()
     model.eval()
-    model.load_state_dict(torch.load('../models/selfnet_b6_norm.pt',map_location='cpu'))
+    model.load_state_dict(torch.load('../models/selfnet_normal_dist1.pt',map_location='cpu'))
     
     # For visualization
  
@@ -36,7 +36,7 @@ def main(): # TODO: clean up inference and creat config
 
     #     loader.vis_keypoints(image, keypoints, prediction)
     sum_kp = torch.zeros(2)
-    name = 'SelfNet with norm'
+    name = 'SelfNet with Eucledian Distance'
     plt.figure(figsize=(64,32))
     plt.title(name)
     for idx, data in enumerate(data_load):
@@ -48,7 +48,7 @@ def main(): # TODO: clean up inference and creat config
         prediction = torch.mul(model(image), 256)
         print(prediction)
 
-        image_copy = loader.vis_keypoints(image, keypoints, prediction, plot=False)
+        image_copy = backup_loader.vis_keypoints(image, keypoints, prediction, plot=False)
         plt.imshow(image_copy)
 
     mean_kp = sum_kp/len(data_load)
