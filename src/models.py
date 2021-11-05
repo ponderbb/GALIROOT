@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import torch.nn.init as I # for weight initialization
 import numpy as np
 
-# loss_list = [nn.MSELoss(), nn.L1Loss()]
 
 class SelfNet(nn.Module):
 
@@ -51,7 +50,8 @@ class SelfNet(nn.Module):
         self.normf5 = nn.BatchNorm1d(num_features=32)
 
     def forward(self, x):
-        # x = x.permute(0,3,1,2)
+        # x = x.type(torch.FloatTensor)
+        x = x.float()
         x = self.pool(F.relu(self.norm1(self.conv1(x))))
         x = self.pool(F.relu(self.norm2(self.conv2(x))))
         x = self.pool(F.relu(self.norm3(self.conv3(x))))
@@ -142,6 +142,7 @@ class SimpleNet(nn.Module):
         ## x is the input image and, as an example, here you may choose to include a pool/conv step:
 
         # 5 conv/relu + pool layers
+        x = x.float()
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
@@ -162,6 +163,9 @@ class SimpleNet(nn.Module):
         x = self.fc6(x)
 
         return x.type(torch.float64)    
+
+models_list = [SelfNet(), SimpleNet()]
+loss_list = [nn.MSELoss()]
 
 
 

@@ -4,18 +4,19 @@
         "annotations": "../data/l515_lab_1410/ann/",
         "augmentations": "../config/augmentations/",
         "save_checkpoint": "../models/checkpoint/",
+        "save_losses": "../models/losses/",
         "save_graph": "../models/train_graph/",
         "save_inference": "../models/inference/"
     },
 
     "processing": {
-        "reuse": true,
-        "load_aug":"base1.json",
+        "reuse": false,
+        "load_aug":"base2.json",
         "add_augmentation":{
             "normalization":true
         },
-        "generate_aug_json":false,
-        "aug_json_name": "base1.json",
+        "generate_aug_json":true,
+        "aug_json_name": "base2.json",
         "format_img": ".png",
         "format_ann": ".json",
         "ROI": {
@@ -31,12 +32,14 @@
     },
 
     "training": { 
-        "model": "name",
-        "loss": "name",
-        "optim": "name",
-        "optim_lr": "learning_rate",
-        "optim_wd": "weight_decay",
+        "model": 1,
+        "checkpoint_name": "simplenet_0511_1539",
+        "loss": 0,
+        "optim": "Adam",
+        "optim_lr": 1e-4,
+        "optim_wd": 1e-6,
+        "batch": 6,
         "epochs": 100,
-        "kfold": 10
+        "kfold": 5
     }
 }
