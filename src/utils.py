@@ -1,10 +1,12 @@
 import json
+import math
 import os
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
 import torch
+from torch._C import device
 
 import loader
 
@@ -29,35 +31,34 @@ def list_files(directory, fileformat):
     return sorted(path_list), sorted(name_list)
 
 def create_file(path):
-    try:
-        open(path, 'w').close()
-    except OSError:
-        print('Failed creating the file')
-    else:
-        print('File created')
+    open(path, 'w').close()
 
-def plot_losses(train_losses, val_losses, epoch, figure, name):
+def create_folder(path):
+    os.makedirs(path, exist_ok=True)
+
+
+def plot_epoch_losses(config, loss_dictionary):
     plt.figure(figsize=(10,5))
-    plt.title("Training and Validation Loss for {}".format(name))
-    plt.plot(range(epoch), val_losses,label="val")
-    plt.plot(range(epoch), train_losses,label="train")
+    plt.title(f"Average loss per epoch for {config['training']['checkpoint_name']}")
+    plt.plot(range(1,config['training']['epochs']+1), loss_dictionary['train_epochs'],label="train")
+    plt.plot(range(1,config['training']['epochs']+1), loss_dictionary['valid_epochs'],label="validation")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig(figure)
+    plt.savefig(config['folders']['out_folder']+f"epoch_loss_{config['training']['checkpoint_name']}.png")
 
-def plot_losses_kfold(loss_dictionary, epoch, name):
+def plot_kfold_losses(config, loss_dictionary):
     plt.figure(figsize=(10,5))
-    plt.title("Training and Validation Loss for {}".format(name))
-    plt.plot(range(epoch), loss_dictionary['train_folds'],label="train")
-    plt.plot(range(epoch), loss_dictionary['valid_folds'],label="validation")
-    plt.xlabel("Epochs")
+    plt.title(f"Average loss per fold for {config['training']['checkpoint_name']}")
+    plt.bar(np.arange(1,config['training']['kfold']+1)-0.1, loss_dictionary['train_folds'],width = 0.2, label="train")
+    plt.bar(np.arange(1,config['training']['kfold']+1)+0.1, loss_dictionary['valid_folds'],width = 0.2, label="validation")
+    plt.xlabel("Folds")
+    plt.xticks(range(1,config['training']['kfold']+1))
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig("/zhome/3b/d/154066/repos/GALIROOT/models/losses/{}.png".format(name)) # FIXME: from config
+    plt.savefig(config['folders']['out_folder']+f"fold_loss_{config['training']['checkpoint_name']}.png") # FIXME: from config
 
-def normalize_keypoints(keypoints, scale):
-    return torch.div(torch.from_numpy(np.asarray(keypoints)),scale)
+
 
 def index_with_list(img_list, ann_list, index):
     return [img_list[i] for i in index], [ann_list[i] for i in index]
@@ -66,12 +67,12 @@ def dump_to_json(file, output):
     with open(output, 'w') as output_file:
         json.dump(file, output_file)
 
-def vis_keypoints(image, keypoints, prediction=None, plot=True):
+def vis_keypoints(image, keypoints, prediction, plot):
 
     '''
     Visualizing keypoints on images.
     
-    # FIXME: might not work due to converting to tensors before the dataloader
+
 
     '''
     image_denorm = loader.inverse_normalize(image,(0.3399, 0.3449, 0.1555),(0.1296, 0.1372, 0.1044))
@@ -81,30 +82,18 @@ def vis_keypoints(image, keypoints, prediction=None, plot=True):
     keypoints = keypoints.detach().numpy()
     prediction = prediction.detach().numpy()
 
-    # for idx in keypoints[0]:
-    #     cv2.circle(image_copy, (int(idx[0]), int(idx[1])), 5, (255,0,0), -1)
-    # if prediction is not None:
-    #     for idx in prediction:
-    #         cv2.circle(image_copy, (int(idx[0]), int(idx[1])), 5, (255,255,0), -1)
-
     for kp, pred in zip(keypoints[0].astype('uint8'),prediction.astype('uint8')):
         cv2.circle(image_copy, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
-        cv2.circle(image_copy, (int(pred[0]), int(pred[1])), 5, (255,255,0), -1)
+        cv2.circle(image_copy, (int(pred[0]), int(pred[1])), 5, (0,0,255), -1)
         cv2.line(image_copy, kp, pred, (255, 255, 255),thickness=1, lineType=1)
 
-    if plot:
-        plt.figure(figsize=(16, 16))
-        plt.axis('off')
-
-        plt.imshow((image_copy).astype('uint8'))
-        plt.show()
 
     return image_copy.astype('uint8')
 
-def main():
+def normal_dist(x , mean , sd, device):
+    # x = x.detach().cpu()
+    # mean = mean.detach().cpu()
+    pi = torch.Tensor([math.pi]).to(device)
+    prob_density = 1/(sd*torch.sqrt(2*pi))* torch.exp(-0.5*((x-mean)/(2*sd))**2)
+    return torch.mean(prob_density)
 
-    losses_dict = open_config("/zhome/3b/d/154066/repos/GALIROOT/models/losses/simplenet_0511_1539.json")
-    plot_losses_kfold(losses_dict,5, "simplenet_0511_1539")
-
-if __name__ == "__main__":
-    main()

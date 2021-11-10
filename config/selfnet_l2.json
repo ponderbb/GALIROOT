@@ -1,10 +1,9 @@
 {
     "folders": {
         "images": "../data/l515_lab_1410/img/",
-        "depth": "../data/l515_lab_1410/depth/",
         "annotations": "../data/l515_lab_1410/ann/",
         "augmentations": "../config/augmentations/",
-        "out_folder": "../models/example/"
+        "out_folder": "../models/selfnet_eucloss_1110_1423/"
     },
 
     "processing": {
@@ -29,13 +28,13 @@
 
     "training": { 
         "model": 0,
-        "checkpoint_name": "example",
+        "checkpoint_name": "selfnet_eucloss_1110_1423",
         "loss": 0,
         "optim": "Adam",
         "optim_lr": 1e-4,
         "optim_wd": 1e-6,
         "batch": 6,
-        "epochs": 5,
-        "kfold": 3
+        "epochs": 20,
+        "kfold": 5
     }
 }

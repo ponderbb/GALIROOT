@@ -10,7 +10,7 @@ import numpy as np
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-class Transforms: # TODO: add this to loader pipeline
+class Transforms: 
     def __init__(self, transforms: A.Compose):
         self.transforms = transforms
 

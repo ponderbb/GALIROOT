@@ -4,6 +4,11 @@ import torch.nn.functional as F
 import torch.nn.init as I # for weight initialization
 import numpy as np
 
+import torch.nn as nn
+import torch.nn.functional as F
+import pretrainedmodels
+
+import utils
 
 class SelfNet(nn.Module):
 
@@ -164,7 +169,95 @@ class SimpleNet(nn.Module):
 
         return x.type(torch.float64)    
 
-models_list = [SelfNet(), SimpleNet()]
+class FaceKeypointResNet50(nn.Module):
+    def __init__(self, pretrained, requires_grad):
+        super(FaceKeypointResNet50, self).__init__()
+        if pretrained == True:
+            self.model = pretrainedmodels.__dict__['resnet50'](pretrained='imagenet')
+        else:
+            self.model = pretrainedmodels.__dict__['resnet50'](pretrained=None)
+        if requires_grad == True:
+            for param in self.model.parameters():
+                param.requires_grad = True
+            print('Training intermediate layer parameters...')
+        elif requires_grad == False:
+            for param in self.model.parameters():
+                param.requires_grad = False
+            print('Freezing intermediate layer parameters...')
+        # change the final layer
+        self.l0 = nn.Linear(2048, 1024)
+        self.l1 = nn.Linear(1024, 512)
+        self.l2 = nn.Linear(512, 256)
+        self.l3 = nn.Linear(256, 128)
+        self.l4 = nn.Linear(128, 64)
+        self.l5 = nn.Linear(64,2)
+        self.dropout = nn.Dropout(p=0.25)
+    def forward(self, x):
+        # get the batch size only, ignore (c, h, w)
+        batch, _, _, _ = x.shape
+        # x = x.permute(0,3,1,2)
+        x = self.model.features(x)
+        x = F.adaptive_avg_pool2d(x, 1).reshape(batch, -1)
+        x = F.relu(self.l0(x))
+        x = F.relu(self.l1(x))
+        x = self.l2(x)
+        x = self.l3(x)
+        x = self.l4(x)
+        x = self.l5(x)
+
+        return x.type(torch.float64)
+
+class FaceKeypointResNet50_dropout(nn.Module):
+    def __init__(self, pretrained, requires_grad):
+        super(FaceKeypointResNet50_dropout, self).__init__()
+        if pretrained == True:
+            self.model = pretrainedmodels.__dict__['resnet50'](pretrained='imagenet')
+        else:
+            self.model = pretrainedmodels.__dict__['resnet50'](pretrained=None)
+        if requires_grad == True:
+            for param in self.model.parameters():
+                param.requires_grad = True
+            print('Training intermediate layer parameters...')
+        elif requires_grad == False:
+            for param in self.model.parameters():
+                param.requires_grad = False
+            print('Freezing intermediate layer parameters...')
+        # change the final layer
+        self.l0 = nn.Linear(2048, 1024)
+        self.l1 = nn.Linear(1024, 512)
+        self.l2 = nn.Linear(512, 256)
+        self.l3 = nn.Linear(256, 128)
+        self.l4 = nn.Linear(128, 64)
+        self.l5 = nn.Linear(64,2)
+        self.dropout = nn.Dropout(p=0.25)
+    def forward(self, x):
+        # get the batch size only, ignore (c, h, w)
+        batch, _, _, _ = x.shape
+        # x = x.permute(0,3,1,2)
+        x = self.model.features(x)
+        x = F.adaptive_avg_pool2d(x, 1).reshape(batch, -1)
+        x = self.dropout(F.relu(self.l0(x)))
+        x = self.dropout(F.relu(self.l1(x)))
+        x = self.l2(x)
+        x = self.l3(x)
+        x = self.l4(x)
+        x = self.l5(x)
+
+        return x.type(torch.float64)
+
+
+def EucledianLoss(prediction, target, device): # FIXME: how to pass this a method (block?)
+    ceiling = (1/np.sqrt(2*np.pi))*10
+    distances = []
+    for idx in range(len(prediction)):
+        eucledian_dist=torch.cdist(prediction[idx].unsqueeze(0),target[idx].unsqueeze(0))
+        distances.append(eucledian_dist)
+    # print(distances)
+    distance_tensor = torch.cat(distances, dim=1)
+    loss = utils.normal_dist(distance_tensor,0,0.1, device)
+    return torch.sub(ceiling,loss)
+
+models_list = [SelfNet(), SimpleNet(), FaceKeypointResNet50(pretrained=True, requires_grad=True),FaceKeypointResNet50_dropout(pretrained=True, requires_grad=True)]
 loss_list = [nn.MSELoss()]
 
 
@@ -173,7 +266,10 @@ if __name__ == "__main__":
 
     x = torch.randn(4,256,256,3) # testing the output
 
-    net = SelfNet()
+    net = models_list[2]
+
+    # print(type(loss_list[0]))
+    # print(type(loss_list[1]))
 
     output = net.forward(x)
     print(output.detach().numpy())

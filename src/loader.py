@@ -1,11 +1,12 @@
 import json
 import os
 import cv2
+import numpy as np
 
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 from torch.utils.data import Dataset
-from torchvision import transforms
+import torch
 
 import utils
 
@@ -32,12 +33,12 @@ class KeypointsDataset(Dataset):
         if not annotation['objects']:
             raise Exception
         else:
-            kp_raw = annotation['objects'][0]['points']['exterior'][0] # FIXME: change here to get mupltipoints in
+            kp_raw = annotation['objects'][0]['points']['exterior'][0] # TODO: add option for reading in multipoint 
             keypoints = [(kp_raw[0],kp_raw[1])] # tuple wrapped in a list
             image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             data = self.transform(image=image, keypoints=keypoints)
-            data['keypoints'] = utils.normalize_keypoints(data['keypoints'],self.config['processing']['size']['height']) # normalize keypoints on the rescaled image
+            data['keypoints'] = _normalize_keypoints(data['keypoints'],self.config['processing']['size']['height']) # normalize keypoints on the rescaled image
             return data
 
 
@@ -55,8 +56,8 @@ def generate_transform(config):
 
     if config['processing']['reuse']:
         print("Reusing previously generated transforms.")
-        train_transform_composed = A.load(os.path.join(config['folders']['augmentations'],config['processing']['load_aug']))
-        valid_transform_composed = A.load(os.path.join(config['folders']['augmentations'],"v"+config['processing']['load_aug']))
+        train_transform_composed = A.load(os.path.join(config['folders']['augmentations'],config['processing']['aug_json_name']))
+        valid_transform_composed = A.load(os.path.join(config['folders']['augmentations'],"v"+config['processing']['aug_json_name']))
     else:
         print("Generating new transforms.")
 
@@ -77,6 +78,12 @@ def generate_transform(config):
             train_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
             valid_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
 
+        if add_augmentation['gaussian_blur']:
+            train_transform.append(A.GaussianBlur())
+
+        if add_augmentation['channel_dropout']:
+            train_transform.append(A.ChannelDropout())
+
         # resize images
         train_transform.append(A.Resize(height = processing['size']['height'], width = processing['size']['height']))
         valid_transform.append(A.Resize(height = processing['size']['height'], width = processing['size']['height']))
@@ -90,17 +97,14 @@ def generate_transform(config):
         valid_transform_composed = A.Compose(valid_transform, keypoint_params=A.KeypointParams(format='xy'))
 
         # save the generated augmentation
-        if config['processing']['generate_aug_json']:
-            print("Generating augmentation json.\n")
-            A.save(train_transform_composed, os.path.join(config['folders']['augmentations'],processing['aug_json_name']))
-            A.save(valid_transform_composed, os.path.join(config['folders']['augmentations'],"v"+processing['aug_json_name']))
+        print("Generating augmentation json.\n")
+        A.save(train_transform_composed, os.path.join(config['folders']['augmentations'],processing['aug_json_name']))
+        A.save(valid_transform_composed, os.path.join(config['folders']['augmentations'],"v"+processing['aug_json_name']))
 
     return train_transform_composed, valid_transform_composed
 
-
-# def inverse_normalize(image, mean, std):
-#     inv_norm = transforms.Normalize(mean=[-x/y for x, y in zip(mean,std)],std=[1/x for x in std])
-#     return inv_norm(image)
+def _normalize_keypoints(keypoints, scale):
+    return torch.div(torch.from_numpy(np.asarray(keypoints)),scale)
 
 def inverse_normalize(tensor, mean, std):
     for t, m, s in zip(tensor, mean, std):
