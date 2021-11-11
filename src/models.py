@@ -247,7 +247,7 @@ class FaceKeypointResNet50_dropout(nn.Module):
 
 
 def EucledianLoss(prediction, target, device): # FIXME: how to pass this a method (block?)
-    ceiling = (1/np.sqrt(2*np.pi))*10
+    ceiling = 10/np.sqrt(2*np.pi)
     distances = []
     for idx in range(len(prediction)):
         eucledian_dist=torch.cdist(prediction[idx].unsqueeze(0),target[idx].unsqueeze(0))

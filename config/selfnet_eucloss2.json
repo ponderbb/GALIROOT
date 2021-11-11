@@ -3,7 +3,7 @@
         "images": "../data/l515_lab_1410/img/",
         "annotations": "../data/l515_lab_1410/ann/",
         "augmentations": "../config/augmentations/",
-        "out_folder": "../models/resnet50_1110_1402/"
+        "out_folder": "../models/selfnet_eucloss_1110_1423/"
     },
 
     "processing": {
@@ -28,13 +28,13 @@
 
     "training": { 
         "model": 0,
-        "checkpoint_name": "resnet50_1110_1402",
+        "checkpoint_name": "selfnet_eucloss_1110_1423",
         "loss": 0,
         "optim": "Adam",
-        "optim_lr": 1e-4,
+        "optim_lr": 1e-5,
         "optim_wd": 1e-6,
-        "batch": 8,
-        "epochs": 20,
-        "kfold": 5
+        "batch": 6,
+        "epochs": 50,
+        "kfold": 1
     }
 }
