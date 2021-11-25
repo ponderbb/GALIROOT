@@ -1,7 +1,10 @@
 import json
 import os
+from albumentations.augmentations.transforms import ColorJitter
 import cv2
 import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
 
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
@@ -38,6 +41,9 @@ class KeypointsDataset(Dataset):
             image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             data = self.transform(image=image, keypoints=keypoints)
+            if not data['keypoints']:
+                print('Empty keypoint')
+                pass
             data['keypoints'] = _normalize_keypoints(data['keypoints'],self.config['processing']['size']['height']) # normalize keypoints on the rescaled image
             return data
 
@@ -84,6 +90,21 @@ def generate_transform(config):
         if add_augmentation['channel_dropout']:
             train_transform.append(A.ChannelDropout())
 
+        if add_augmentation['color_jitter']:
+            train_transform.append(A.ColorJitter())
+
+        if add_augmentation['vertical_flip']:
+            train_transform.append(A.VerticalFlip())
+            # valid_transform.append(A.VerticalFlip())
+
+        if add_augmentation['horizontal_flip']:
+            train_transform.append(A.HorizontalFlip())
+            # valid_transform.append(A.HorizontalFlip())
+
+        if add_augmentation['safe_rotate']:
+            train_transform.append(A.Rotate(p=0.75))
+            # valid_transform.append(A.SafeRotate(border_mode=0))
+
         # resize images
         train_transform.append(A.Resize(height = processing['size']['height'], width = processing['size']['height']))
         valid_transform.append(A.Resize(height = processing['size']['height'], width = processing['size']['height']))
@@ -110,7 +131,6 @@ def inverse_normalize(tensor, mean, std):
     for t, m, s in zip(tensor, mean, std):
             t.mul_(s).add_(m)
             return tensor
-    
 
 def main():
 
@@ -122,7 +142,7 @@ def main():
     config = utils.open_config('../config/example.json')
     train_transform, valid_transform = generate_transform(config)
 
-    ann_list, __ = utils.list_files(config['folders']['annotations'], config['processing']['format_ann'])
+    ann_list, __ = utils.list_files(config['folders']['annota   tions'], config['processing']['format_ann'])
     img_list, __ = utils.list_files(config['folders']['images'], config['processing']['format_img'])
 
     kf = KFold(n_splits=config['training']['kfold'],shuffle=True)

@@ -4,12 +4,12 @@
         "depth": "../data/l515_lab_1410/depth/",
         "annotations": "../data/l515_lab_1410/ann/",
         "augmentations": "../config/augmentations/",
-        "out_folder": "../models/selfnet_2411_1654/"
+        "out_folder": "../models/resnet50_2411_1554/"
     },
 
     "processing": {
         "reuse": false,
-        "aug_json_name": "selfnet_1.json",
+        "aug_json_name": "resnet50.json",
         "add_augmentation":{
             "normalization":true,
             "gaussian_blur":true,
@@ -34,8 +34,8 @@
     },
 
     "training": { 
-        "model": 0,
-        "checkpoint_name": "selfnet_2411_1654",
+        "model": 3,
+        "checkpoint_name": "resnet50_2411_1554",
         "loss": 0,
         "optim": "Adam",
         "optim_lr": 1e-4,

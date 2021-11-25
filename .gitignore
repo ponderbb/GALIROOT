@@ -5,6 +5,8 @@ models/
 data/
 .vscode/
 src/runs/
+wandb/
+wandb_auth.txt
 
 
 # Byte-compiled / optimized / DLL files

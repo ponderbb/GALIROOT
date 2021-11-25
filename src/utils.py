@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import shutil
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +37,6 @@ def create_file(path):
 def create_folder(path):
     os.makedirs(path, exist_ok=True)
 
-
 def plot_epoch_losses(config, loss_dictionary):
     plt.figure(figsize=(10,5))
     plt.title(f"Average loss per epoch for {config['training']['checkpoint_name']}")
@@ -67,28 +67,27 @@ def dump_to_json(file, output):
     with open(output, 'w') as output_file:
         json.dump(file, output_file)
 
-def vis_keypoints(image, keypoints, prediction, plot):
+def vis_keypoints(image, keypoints, prediction, distance, mean):
 
     '''
     Visualizing keypoints on images.
-    
-
-
     '''
     image_denorm = loader.inverse_normalize(image,(0.3399, 0.3449, 0.1555),(0.1296, 0.1372, 0.1044))
     image_denorm = image_denorm.mul_(255)
     image_copy = image_denorm.squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
-    # image_copy = cv2.cvtColor(image_copy, cv2.COLOR_RGB2BGR)
+
+    border_image = make_border(image_copy,distance,mean)
+
     keypoints = keypoints.detach().numpy()
     prediction = prediction.detach().numpy()
 
     for kp, pred in zip(keypoints[0].astype('uint8'),prediction.astype('uint8')):
-        cv2.circle(image_copy, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
-        cv2.circle(image_copy, (int(pred[0]), int(pred[1])), 5, (0,0,255), -1)
-        cv2.line(image_copy, kp, pred, (255, 255, 255),thickness=1, lineType=1)
+        cv2.circle(border_image, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
+        cv2.circle(border_image, (int(pred[0]), int(pred[1])), 5, (0,0,255), -1)
+        cv2.line(border_image, kp, pred, (255, 255, 255),thickness=1, lineType=1)
 
 
-    return image_copy.astype('uint8')
+    return border_image.astype('uint8')
 
 def normal_dist(x , mean , sd, device):
     # x = x.detach().cpu()
@@ -97,3 +96,37 @@ def normal_dist(x , mean , sd, device):
     prob_density = 1/(sd*torch.sqrt(2*pi))* torch.exp(-0.5*((x-mean)/(2*sd))**2)
     return torch.mean(prob_density)
 
+def closest_to_average(epoch_average, epochs: list):
+    diff = [abs(e-epoch_average) for e in epochs]
+    closest_value = diff.index(min(diff))
+    return closest_value+1
+
+def cleanup_models(loss_dictionary: dict, training: dict, folders: dict):
+    temp_folder = os.path.join(folders['out_folder'], 'temp')
+    old_path = os.path.join(temp_folder, "f{}_{}.pt".format(loss_dictionary['average'],training['checkpoint_name']))
+    new_path = os.path.join(folders['out_folder'], "{}.pt".format(training['checkpoint_name']))
+    print(f"Moving model {training['checkpoint_name']}")
+    shutil.move(old_path,new_path)
+    print(f'Deleting {temp_folder}')
+    shutil.rmtree(temp_folder)
+
+def eucledian_dist(prediction, ground_truth):
+    return np.sqrt(np.power(prediction[0]-ground_truth[0],2)+np.power(prediction[1]-ground_truth[1],2))
+
+def make_border(image, distance, mean):
+    bordersize = 10
+    above = (255,0,0)
+    below = (0,255,0)
+    if distance>mean:
+        color = above
+    else:
+        color = below
+    border_image = cv2.copyMakeBorder(
+        image,
+        top=bordersize,
+        bottom=bordersize,
+        left=bordersize,
+        right=bordersize,
+        borderType=cv2.BORDER_CONSTANT,
+        value=color)
+    return border_image

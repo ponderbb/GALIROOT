@@ -4,16 +4,16 @@
         "depth": "../data/l515_lab_1410/depth/",
         "annotations": "../data/l515_lab_1410/ann/",
         "augmentations": "../config/augmentations/",
-        "out_folder": "../models/selfnet_2411_1654/"
+        "out_folder": "../models/resnet18_2511_0942/"
     },
 
     "processing": {
-        "reuse": false,
-        "aug_json_name": "selfnet_1.json",
+        "reuse": true,
+        "aug_json_name": "resnet18.json",
         "add_augmentation":{
             "normalization":true,
             "gaussian_blur":true,
-            "channel_dropout":true,
+            "channel_dropout":false,
             "vertical_flip":true,
             "horizontal_flip":true,
             "safe_rotate": false,
@@ -34,8 +34,8 @@
     },
 
     "training": { 
-        "model": 0,
-        "checkpoint_name": "selfnet_2411_1654",
+        "model": 5,
+        "checkpoint_name": "resnet18_2511_0942",
         "loss": 0,
         "optim": "Adam",
         "optim_lr": 1e-4,
@@ -43,7 +43,7 @@
         "batch": 6,
         "epochs": 20,
         "kfold": 5,
-        "patience": 7,
+        "patience": 5,
         "delta": 1e-4
     }
 }
