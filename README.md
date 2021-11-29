@@ -1,7 +1,9 @@
 # GALIROOT
-DTU Special course on the GALIRUMI project.
 
-![Sad news, you cannot see out firled trip...](field_trip.gif)
+DTU special project under the EU project [GALIRUMI](https://galirumi-project.eu/news/new1). Small sneak-peak to our fun field trips:
+
+<img src="field_trip.gif" width="180" height="360"/>
+
 ___
 
 ## Setup
@@ -42,11 +44,11 @@ Logging and online visualization happens through the [Weights and Biases](https:
 
 The script requires a configuration file defining the hyperparamters for the model and the I/O folders.
 
-`python3 full_pipeline -c ~\config\example.json`
+`python3 full_pipeline.py -c ~\config\example.json`
 
 The inference (plotting and trying the model on the test images) is integrated in the pipeline, but can be run separately. [^1]
 
-`python3 inference -c ~\config\example.json`
+`python3 inference.py -c ~\config\example.json`
 
 The outputs of these scripts will be saved under the model folder.
 
