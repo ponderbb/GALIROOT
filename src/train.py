@@ -104,7 +104,7 @@ def _valid_epoch(model,device,data_loader,loss_fn):
 
 def _log_losses(config, all_losses): # FIXME: this is the final boss of nightmares
 
-    train_folds, valid_folds=[],[]
+    train_folds, valid_folds, train_eval, valid_eval=[],[],[],[]
 
     # Calculate the average loss of each fold for all epochs # FIXME: this is a nightmare
     k = config['training']['kfold']
@@ -112,21 +112,32 @@ def _log_losses(config, all_losses): # FIXME: this is the final boss of nightmar
         f_avg_t = np.mean(all_losses['fold{}'.format(f)]['train_loss'])
         f_avg_v = np.mean(all_losses['fold{}'.format(f)]['valid_loss'])
 
+        best_train_loss = np.min(all_losses['fold{}'.format(f)]['train_loss'])
+        best_valid_loss = np.min(all_losses['fold{}'.format(f)]['valid_loss'])
+
         wandb.log({'train_fold_avg': f_avg_t,
                    'valid_fold_avg': f_avg_v})
 
         train_folds.append(f_avg_t)
         valid_folds.append(f_avg_v)
 
+        wandb.log({'train_best_loss': best_train_loss,
+                   'valid_best_loss': best_valid_loss})
+
+        train_eval.append(best_train_loss)
+        valid_eval.append(best_valid_loss)
+
     train_folds_average = np.mean(train_folds)
 
     valid_folds_average = np.mean(valid_folds)
 
+    valid_eval_average = np.mean(valid_eval)
+
     print('Performance of {} fold cross validation'.format(k))
     print("Average Training Loss: {:.5f} \t Average Test Loss: {:.5f}".format(train_folds_average,valid_folds_average))
     
-    best_fold_idx = valid_folds.index(min(valid_folds))+1
-    average_fold_idx = utils.closest_to_average(valid_folds_average, valid_folds)
+    best_fold_idx = valid_eval.index(min(valid_eval))+1
+    average_fold_idx = utils.closest_to_average(valid_eval_average, valid_eval)
 
     print(f'Best performing epoch: {best_fold_idx}\nEpoch closest to average: {average_fold_idx}')
 

@@ -414,7 +414,7 @@ models_list = [SelfNet(),
                FaceKeypointResNet50_dropout(pretrained=True, requires_grad=True),
                ResNet18(pretrained=True, requires_grad=True),
                ResNet18_v2(pretrained=True, requires_grad=True),
-               ResNet18_4ch(pretrained=False, requires_grad=True)]
+               ResNet18_4ch(pretrained=True, requires_grad=True)]
 loss_list = [nn.MSELoss()]
 
 

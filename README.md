@@ -11,9 +11,10 @@ The images are contained under *annotated_images.zip* and the transformed and sp
 
 ```
 data
-└──annotated_images.zip
+└──train/ test files
     └──ann
     └──img
+    └──depth
 └──pickle_jar
     └──train_set.pickle
     └──valid_set.pickle
@@ -24,10 +25,7 @@ models
 
 ## Usage
 
-`train_pipeline.py` is running the training loop, based on the settings of `train_config.json` and `*_dataset.json`. [^1] It is using Tensorboard as a visualization tool. The batch size and epoch has to be manually changed as of now.
-
-`inference_test.py` is a small script plotting individually 10 samples from the whole dataset and generating a 2-by-5 grid of it (saved to data/inference). The purpose is the visual analysis of the predictions.
-
+`full_pipeline.`
 
 
 

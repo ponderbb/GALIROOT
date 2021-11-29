@@ -27,7 +27,7 @@ class KeypointsDataset(Dataset):
         self.mask_list = masks
         self.transform = transform
         self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044])])
-        self.mask_norm = A.Compose([A.Normalize(mean=[180.62], std=[47.2969])])
+        self.mask_norm = A.Compose([A.Normalize(mean=[0.7188], std=[0.1109])])
         self.depth_channel = depth
 
 
