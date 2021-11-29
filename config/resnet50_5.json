@@ -1,0 +1,42 @@
+{
+    "folders": {
+        "images": "../data/l515_lab_1410/img/",
+        "annotations": "../data/l515_lab_1410/ann/",
+        "augmentations": "../config/augmentations/",
+        "out_folder": "../models/resnet50_1110_2117/"
+    },
+
+    "processing": {
+        "reuse": true,
+        "aug_json_name": "extra_aug1.json",
+        "add_augmentation":{
+            "normalization":true,
+            "gaussian_blur": true,
+            "channel_dropout": true
+        },
+        "format_img": ".png",
+        "format_ann": ".json",
+        "ROI": {
+            "x": [345,1120],
+            "y": [365,1000]
+        },
+        "size": {
+            "height": 256,
+            "width": 256
+        },
+        "train_ratio": 0.81,
+        "seeding": 42
+    },
+
+    "training": { 
+        "model": 3,
+        "checkpoint_name": "resnet50_1110_2117",
+        "loss": 0,
+        "optim": "Adam",
+        "optim_lr": 1e-4,
+        "optim_wd": 1e-6,
+        "batch": 8,
+        "epochs": 25,
+        "kfold": 5
+    }
+}

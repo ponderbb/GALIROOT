@@ -1,0 +1,40 @@
+{
+    "folders": {
+        "images": "../data/l515_lab_1410/img/",
+        "annotations": "../data/l515_lab_1410/ann/",
+        "augmentations": "../config/augmentations/",
+        "out_folder": "../models/selfnet_1110_1437_b1/"
+    },
+
+    "processing": {
+        "reuse": true,
+        "aug_json_name": "base2.json",
+        "add_augmentation":{
+            "normalization":true
+        },
+        "format_img": ".png",
+        "format_ann": ".json",
+        "ROI": {
+            "x": [345,1120],
+            "y": [365,1000]
+        },
+        "size": {
+            "height": 256,
+            "width": 256
+        },
+        "train_ratio": 0.81,
+        "seeding": 42
+    },
+
+    "training": { 
+        "model": 0,
+        "checkpoint_name": "selfnet_1110_1437_b1",
+        "loss": 0,
+        "optim": "Adam",
+        "optim_lr": 1e-4,
+        "optim_wd": 1e-6,
+        "batch": 1,
+        "epochs": 20,
+        "kfold": 5
+    }
+}
