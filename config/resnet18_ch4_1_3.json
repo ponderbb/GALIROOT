@@ -9,7 +9,7 @@
 
     "processing": {
         "reuse": false,
-        "aug_json_name": "resnet18_rot.json",
+        "aug_json_name": "resnet18.json",
         "add_augmentation":{
             "normalization":true,
             "gaussian_blur":true,
