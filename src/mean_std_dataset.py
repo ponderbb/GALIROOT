@@ -1,5 +1,3 @@
-
-
 from numpy.core import numeric
 from torch.utils.data.dataset import Dataset
 import torchvision.datasets as datasets
@@ -37,12 +35,14 @@ class DepthTransform(Dataset):
 
     def __getitem__(self, idx):
         img = np.asarray(Image.open(self.img_list[idx]))
+        img = ((img-300)*255)/((500-300))
+        img = img.clip(min=0, max=255)
         data = self.transforms(img)
         return data
 
 if __name__ == "__main__":
 
-    data_path ="/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/depth/"
+    data_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/depth"
 
     # Train dataset
     a_transform = A.Compose([
@@ -72,7 +72,6 @@ if __name__ == "__main__":
     # print(std)
 
     mean = 0.
-
     std = 0.
     nb_samples = 0
     for data in loader:

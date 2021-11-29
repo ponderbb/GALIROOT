@@ -37,12 +37,13 @@ train_transform, valid_transform = loader.generate_transform(config)
 
 ann_list, __ = utils.list_files(folders['annotations'], processing['format_ann'])
 img_list, __ = utils.list_files(folders['images'], processing['format_img'])
+mask_list, __ = utils.list_files(folders['depth'], processing['format_img'])
 
 # Initialize network model
 
 print('\nTraining loop has started.\n')
 
-loss_dictionary = training_loop(config, device, img_list, ann_list, train_transform, valid_transform)
+loss_dictionary = training_loop(config, device, img_list, ann_list, mask_list, train_transform, valid_transform)
 
 # plot losses
 

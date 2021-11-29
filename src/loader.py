@@ -20,11 +20,15 @@ class KeypointsDataset(Dataset):
     Loader for supervisely based dataset
     '''
 
-    def __init__(self, config, annotations, images, transform):
+    def __init__(self, config, annotations, images, masks, transform, depth=False):
         self.config = config
         self.annotations_list = annotations
         self.images_list = images
+        self.mask_list = masks
         self.transform = transform
+        self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044])])
+        self.mask_norm = A.Compose([A.Normalize(mean=[180.62], std=[47.2969])])
+        self.depth_channel = depth
 
 
     def __len__(self):
@@ -36,11 +40,26 @@ class KeypointsDataset(Dataset):
         if not annotation['objects']:
             raise Exception
         else:
+            # Read in values
             kp_raw = annotation['objects'][0]['points']['exterior'][0] # TODO: add option for reading in multipoint 
             keypoints = [(kp_raw[0],kp_raw[1])] # tuple wrapped in a list
+
             image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            data = self.transform(image=image, keypoints=keypoints)
+            norm_img = self.img_norm(image=image)
+
+            if self.depth_channel:
+                mask = np.asarray(Image.open(self.mask_list[idx]))
+                norm_mask = self.mask_norm(image=mask)
+                norm_mask = np.expand_dims(norm_mask['image'], axis=-1)
+
+                # Concatenate into a 4 channel input
+                combined_image = np.concatenate((norm_img['image'], norm_mask), axis=2)
+
+                data = self.transform(image=combined_image, keypoints=keypoints)
+            else:
+                data = self.transform(image=norm_img['image'], keypoints=keypoints)
+
             if not data['keypoints']:
                 print('Empty keypoint')
                 pass
@@ -80,9 +99,10 @@ def generate_transform(config):
         valid_transform.append(A.Crop(x_min=x[0], y_min=y[0], x_max=x[1], y_max=y[1]))
 
         # add augmentations if specified in the .json
-        if add_augmentation['normalization']:
-            train_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
-            valid_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
+        if add_augmentation['normalization']: # TODO: remove this from config
+            # train_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
+            # valid_transform.append(A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044]))
+            pass
 
         if add_augmentation['gaussian_blur']:
             train_transform.append(A.GaussianBlur())

@@ -6,6 +6,7 @@ import numpy as np
 
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 import pretrainedmodels
 
 import utils
@@ -24,7 +25,7 @@ class SelfNet(nn.Module):
 
         # output = (W-F+2P)/S+1
 
-        self.conv1 = nn.Conv2d(3, 32, 5) # 315 385
+        self.conv1 = nn.Conv2d(4, 32, 5) # 315 385
         self.conv2 = nn.Conv2d(32, 64, 3) # 156 191
         self.conv3 = nn.Conv2d(64, 128, 3) # 77 94
         self.conv4 = nn.Conv2d(128, 256, 3) # 37 46
@@ -60,9 +61,9 @@ class SelfNet(nn.Module):
     def forward(self, x):
         # x = x.type(torch.FloatTensor)
         x = x.float()
-        x = self.pool(F.relu(self.norm1(self.conv1(x))))
-        x = self.pool(F.relu(self.norm2(self.conv2(x))))
-        x = self.pool(F.relu(self.norm3(self.conv3(x))))
+        x = self.dropout(self.pool(F.relu(self.norm1(self.conv1(x)))))
+        x = self.dropout(self.pool(F.relu(self.norm2(self.conv2(x)))))
+        x = self.dropout(self.pool(F.relu(self.norm3(self.conv3(x)))))
         x = self.pool(F.relu(self.norm4(self.conv4(x))))
         x = self.pool(F.relu(self.norm5(self.conv5(x))))
 
@@ -283,7 +284,7 @@ class ResNet18(nn.Module):
         self.l7 = nn.Linear(16,2)
 
         self.dropout = nn.Dropout(p=0.25)
-    def forward(self, x):
+    def forward(self, x): 
         # get the batch size only, ignore (c, h, w)
         batch, _, _, _ = x.shape
         # x = x.permute(0,3,1,2)
@@ -297,7 +298,6 @@ class ResNet18(nn.Module):
         x = self.l7(x)
 
         return x.type(torch.float64)
-
 
 class ResNet18_v2(nn.Module):
     def __init__(self, pretrained, requires_grad):
@@ -325,14 +325,66 @@ class ResNet18_v2(nn.Module):
         self.l9 = nn.Linear(4,2)
         
         self.dropout = nn.Dropout(p=0.25)
-        self.norm2 = nn.BatchNorm1d(256)
-        self.norm3 = nn.BatchNorm1d(128)
-        self.norm4 = nn.BatchNorm1d(64)
+        # self.norm2 = nn.BatchNorm1d(256)
+        # self.norm3 = nn.BatchNorm1d(128)
+        # self.norm4 = nn.BatchNorm1d(64)
     def forward(self, x):
         # get the batch size only, ignore (c, h, w)
         batch, _, _, _ = x.shape
         # x = x.permute(0,3,1,2)
         x = self.model.features(x)
+        x = F.adaptive_avg_pool2d(x, 1).reshape(batch, -1)
+        x = F.relu(self.l2(x))
+        x = F.relu(self.l3(x))
+        x = F.relu(self.l4(x))
+        x = self.l5(x)
+        x = self.l6(x)
+        x = self.l7(x)
+        x = self.l8(x)
+        x = self.l9(x)
+
+        return x.type(torch.float64)
+
+class ResNet18_4ch(nn.Module):
+    def __init__(self, pretrained, requires_grad):
+        super(ResNet18_4ch, self).__init__()
+        # if pretrained == True:
+        #     self.model = pretrainedmodels.__dict__['resnet18'](pretrained='imagenet')
+        # else:
+        #     self.model = pretrainedmodels.__dict__['resnet18'](pretrained=None)
+        # if requires_grad == True:
+        #     for param in self.model.parameters():
+        #         param.requires_grad = True
+        #     print('Training intermediate layer parameters...')
+        # elif requires_grad == False:
+        #     for param in self.model.parameters():
+        #         param.requires_grad = False
+        #     print('Freezing intermediate layer parameters...')
+        self.model = models.resnet18(pretrained=pretrained)
+
+        # add own layer
+        pretrained_weights = self.model.conv1.weight.clone()
+        self.model.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3,bias=False)
+        with torch.no_grad():
+            self.model.conv1.weight[:,:3,:,:] = torch.nn.Parameter(pretrained_weights)
+            self.model.conv1.weight[:,3,:,:] = torch.nn.Parameter(pretrained_weights[:,1,:,:])#
+
+        self.new_model = nn.Sequential(*list(self.model.children())[:-2]) # remove the last two layers 
+
+        # change the final layer
+        self.l2 = nn.Linear(512, 256)
+        self.l3 = nn.Linear(256, 128)
+        self.l4 = nn.Linear(128, 64)
+        self.l5 = nn.Linear(64,32)
+        self.l6 = nn.Linear(32,16)
+        self.l7 = nn.Linear(16,8)
+        self.l8 = nn.Linear(8,4)
+        self.l9 = nn.Linear(4,2)
+
+    def forward(self, x):
+        # get the batch size only, ignore (c, h, w)
+        batch, _, _, _ = x.shape
+        x = self.new_model(x)
         x = F.adaptive_avg_pool2d(x, 1).reshape(batch, -1)
         x = F.relu(self.l2(x))
         x = F.relu(self.l3(x))
@@ -361,7 +413,8 @@ models_list = [SelfNet(),
                FaceKeypointResNet50(pretrained=True, requires_grad=True),
                FaceKeypointResNet50_dropout(pretrained=True, requires_grad=True),
                ResNet18(pretrained=True, requires_grad=True),
-               ResNet18_v2(pretrained=True, requires_grad=True)]
+               ResNet18_v2(pretrained=True, requires_grad=True),
+               ResNet18_4ch(pretrained=False, requires_grad=True)]
 loss_list = [nn.MSELoss()]
 
 
@@ -370,7 +423,8 @@ if __name__ == "__main__":
 
     x = torch.randn(4,4,256,256) # testing the output
 
-    net = models_list[0]
+    net = models_list[6]
+    print(net)
 
     # print(type(loss_list[0]))
     # print(type(loss_list[1]))

@@ -9,7 +9,7 @@ import torch.optim as optim
 
 import wandb
 
-def training_loop(config, device, img_list, ann_list, train_transform, valid_transform):
+def training_loop(config, device, img_list, ann_list, mask_list, train_transform, valid_transform):
 
     
     _, _, training = utils.first_layer_keys(config)
@@ -25,11 +25,11 @@ def training_loop(config, device, img_list, ann_list, train_transform, valid_tra
 
         print('Fold {}'.format(fold + 1))
 
-        train_img, train_ann = utils.index_with_list(img_list, ann_list, train_index)
-        valid_img, valid_ann = utils.index_with_list(img_list, ann_list, valid_index)
+        train_img, train_ann, train_mask = utils.index_with_list(img_list, ann_list, mask_list, train_index)
+        valid_img, valid_ann, valid_mask = utils.index_with_list(img_list, ann_list, mask_list, valid_index)
 
-        train_set = loader.KeypointsDataset(config, train_ann, train_img, train_transform)
-        valid_set = loader.KeypointsDataset(config, valid_ann, valid_img, valid_transform)
+        train_set = loader.KeypointsDataset(config, train_ann, train_img, train_mask, train_transform, training['depth'])
+        valid_set = loader.KeypointsDataset(config, valid_ann, valid_img, valid_mask, valid_transform, training['depth'])
 
         train_loader = torch.utils.data.DataLoader(train_set, batch_size=training['batch'])
         valid_loader = torch.utils.data.DataLoader(valid_set, batch_size=training['batch'])
@@ -125,7 +125,7 @@ def _log_losses(config, all_losses): # FIXME: this is the final boss of nightmar
     print('Performance of {} fold cross validation'.format(k))
     print("Average Training Loss: {:.5f} \t Average Test Loss: {:.5f}".format(train_folds_average,valid_folds_average))
     
-    best_fold_idx = valid_folds.index(min(valid_folds))
+    best_fold_idx = valid_folds.index(min(valid_folds))+1
     average_fold_idx = utils.closest_to_average(valid_folds_average, valid_folds)
 
     print(f'Best performing epoch: {best_fold_idx}\nEpoch closest to average: {average_fold_idx}')
@@ -147,8 +147,7 @@ def _log_losses(config, all_losses): # FIXME: this is the final boss of nightmar
     
     utils.dump_to_json(loss_dictionary,os.path.join(config['folders']['out_folder'],f"loss_{config['training']['checkpoint_name']}.json"))
 
-    return loss_dictionary # FIXME: how do you get over pasing the same shit from the function inception???
-
+    return loss_dictionary 
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
     def __init__(self, patience=7, verbose=False, delta=0, path='checkpoint.pt', trace_func=print):
