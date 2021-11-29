@@ -1,8 +1,12 @@
 # GALIROOT
 
 DTU special project under the EU project [GALIRUMI](https://galirumi-project.eu/news/new1). Small sneak-peak to our fun field trips:
+<p float="left">
+  <img src="field_trip.gif" width="180" height="360"/>
+    <img src="field_trip3.gif" width="180" height="360"/>
+  <img src="field_trip2.gif" width="180" height="360"/>
 
-<img src="field_trip.gif" width="180" height="360"/>
+</p>
 
 ___
 
