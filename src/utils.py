@@ -60,8 +60,8 @@ def plot_kfold_losses(config, loss_dictionary):
 
 
 
-def index_with_list(img_list, ann_list, index):
-    return [img_list[i] for i in index], [ann_list[i] for i in index]
+def index_with_list(img_list, ann_list, mask_list, index):
+    return [img_list[i] for i in index], [ann_list[i] for i in index], [mask_list[i] for i in index]
 
 def dump_to_json(file, output):
     with open(output, 'w') as output_file:
@@ -74,12 +74,12 @@ def vis_keypoints(image, keypoints, prediction, distance, mean):
     '''
     image_denorm = loader.inverse_normalize(image,(0.3399, 0.3449, 0.1555),(0.1296, 0.1372, 0.1044))
     image_denorm = image_denorm.mul_(255)
-    image_copy = image_denorm.squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
+    image_copy = image_denorm.cpu().squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
 
     border_image = make_border(image_copy,distance,mean)
 
-    keypoints = keypoints.detach().numpy()
-    prediction = prediction.detach().numpy()
+    keypoints = keypoints.cpu().detach().numpy()
+    prediction = prediction.cpu().detach().numpy()
 
     for kp, pred in zip(keypoints[0].astype('uint8'),prediction.astype('uint8')):
         cv2.circle(border_image, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
@@ -117,7 +117,7 @@ def make_border(image, distance, mean):
     bordersize = 10
     above = (255,0,0)
     below = (0,255,0)
-    if distance>mean:
+    if distance>40:
         color = above
     else:
         color = below

@@ -15,16 +15,12 @@ def inference(config, loss_dictionary, device):
 
     ann_list, __ = utils.list_files("../data/l515_lab_1410_test/ann", processing['format_ann'])
     img_list, __ = utils.list_files("../data/l515_lab_1410_test/img", processing['format_img'])
+    mask_list, __ = utils.list_files("../data/l515_lab_1410_test/depth", processing['format_img'])
 
     train_transform, valid_transform = loader.generate_transform(config)
 
-    # index = random.sample(range(len(img_list)),5)
-    index = [1,2,3,4,5]
-
-    dataset = loader.KeypointsDataset(config, ann_list, img_list, valid_transform)
-    subset = torch.utils.data.Subset(dataset, index)
+    dataset = loader.KeypointsDataset(config, ann_list, img_list, mask_list, valid_transform, training['depth'])
     data_load = torch.utils.data.DataLoader(dataset)
-    subset_load = torch.utils.data.DataLoader(subset)
 
     model = models_list[training['model']]
     model.eval()
@@ -47,8 +43,7 @@ def inference(config, loss_dictionary, device):
         ground_truth_list.append(keypoints_np)
 
     mean_list = np.mean(distance_list)
-    # text = 'Average prediction\noffset: {:.3f}'.format(np.mean(distance_list))
-    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    print(f'MEAN: {mean_list}')
 
     plt.figure(1, figsize=(10,5))
 
@@ -113,13 +108,12 @@ def inference(config, loss_dictionary, device):
         kp_np = [int(x) for x in keypoints.cpu().detach().numpy()[0][0]]
 
         prediction = torch.mul(model(image), 256)
-        print(prediction)
         pred_np = [int(x) for x in prediction.cpu().detach().numpy()[0]]
 
         eucledian_dist = np.sqrt(np.power(pred_np[0]-kp_np[0],2)+np.power(pred_np[1]-kp_np[1],2))
         plt.text(0,300, f"Eucl. dist: {int(eucledian_dist)} pixels", color = (0,0,0), fontsize = 'xx-large')
 
-        image_copy = utils.vis_keypoints(image, keypoints, prediction, eucledian_dist, mean_list)
+        image_copy = utils.vis_keypoints(image[:,:3,:,:], keypoints, prediction, eucledian_dist, mean_list)
         plt.imshow(image_copy)
         plt.show()
 
@@ -127,7 +121,7 @@ def inference(config, loss_dictionary, device):
 
 def main():
     parser = argparse.ArgumentParser(description='configuration_file')
-    parser.add_argument('-c', '--config', default='/zhome/3b/d/154066/repos/GALIROOT/config/.json', type=str, help='Configuration .json file')
+    parser.add_argument('-c', '--config', default='/zhome/3b/d/154066/repos/GALIROOT/config/example.json', type=str, help='Configuration .json file')
     args = parser.parse_args()
 
     # loading configurations 

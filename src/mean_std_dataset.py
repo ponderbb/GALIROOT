@@ -1,5 +1,3 @@
-
-
 from numpy.core import numeric
 from torch.utils.data.dataset import Dataset
 import torchvision.datasets as datasets
@@ -37,45 +35,51 @@ class DepthTransform(Dataset):
 
     def __getitem__(self, idx):
         img = np.asarray(Image.open(self.img_list[idx]))
+        img = ((img-300))/((500-300))
+        img = img.clip(min=0, max=1)
         data = self.transforms(img)
         return data
 
 if __name__ == "__main__":
 
-    data_path ="/home/bbejczy/repos/GALIROOT/data/l515_lab_1410/depth/"
+    data_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/img"
+    depth_path ="/zhome/3b/d/154066/repos/GALIROOT/data/l515_lab_1410/depth"
 
     # Train dataset
     a_transform = A.Compose([
         A.Crop(x_min=345, y_min=365, x_max=1120, y_max=1000)])
 
-    # dataset = datasets.ImageFolder(f"{data_path}", transform = transforms.Compose([Transforms(a_transform), transforms.ToTensor()]))
+    dataset = datasets.ImageFolder(f"{data_path}", transform = transforms.Compose([Transforms(a_transform), transforms.ToTensor()]))
     
-    dataset = DepthTransform(data_path,a_transform)
-    loader = torch.utils.data.DataLoader(dataset,
+    depth_dataset = DepthTransform(depth_path,a_transform)
+    image_loader = torch.utils.data.DataLoader(dataset,
+                        batch_size=10,
+                        num_workers=0,
+                        shuffle=False)
+    depth_loader = torch.utils.data.DataLoader(depth_dataset,
                             batch_size=10,
                             num_workers=0,
                             shuffle=False)
-    # mean = 0.
-    # std = 0.
-    # nb_samples = 0
-    # for data, _ in loader:
-    #     batch_samples = data.size(0)
-    #     data = data.view(batch_samples, data.size(1), -1)
-    #     mean += data.mean(2).sum(0)
-    #     std += data.std(2).sum(0)
-    #     nb_samples += batch_samples
-
-    # mean /= nb_samples
-    # std /= nb_samples
-
-    # print(mean)
-    # print(std)
-
     mean = 0.
-
     std = 0.
     nb_samples = 0
-    for data in loader:
+    for data, _ in image_loader:
+        batch_samples = data.size(0)
+        data = data.view(batch_samples, data.size(1), -1)
+        mean += data.mean(2).sum(0)
+        std += data.std(2).sum(0)
+        nb_samples += batch_samples
+
+    mean /= nb_samples
+    std /= nb_samples
+    print("\nImages:")
+    print(mean)
+    print(std)
+
+    mean = 0.
+    std = 0.
+    nb_samples = 0
+    for data in depth_loader:
         batch_samples = data.size(0)
         data = data.view(batch_samples, data.size(1), -1)
         data_float = data.type(torch.FloatTensor)
@@ -86,6 +90,6 @@ if __name__ == "__main__":
 
     mean /= nb_samples
     std /= nb_samples
-
+    print("\nDepth images:")
     print(mean)
     print(std)
