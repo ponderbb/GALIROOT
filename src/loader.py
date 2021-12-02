@@ -1,6 +1,8 @@
 import json
 import os
 from albumentations.augmentations.transforms import ColorJitter
+from torch.utils.data.dataset import T
+import torchvision.transforms as transforms
 import cv2
 import numpy as np
 from PIL import Image
@@ -26,8 +28,8 @@ class KeypointsDataset(Dataset):
         self.images_list = images
         self.mask_list = masks
         self.transform = transform
-        self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044])])
-        self.mask_norm = A.Compose([A.Normalize(mean=[0.7188], std=[0.1109])])
+        self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044],max_pixel_value=1.0)])
+        self.mask_norm = A.Compose([A.Normalize(mean=[0.7188], std=[0.1109],max_pixel_value=1.0)])
         self.depth_channel = depth
 
 
@@ -46,11 +48,24 @@ class KeypointsDataset(Dataset):
 
             image = cv2.imread(self.images_list[idx])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            # NOTE: this is the newly added remapping
+            image = np.divide(image,255) 
+            
+            # print("img_b:", image.min(), image.max())
             norm_img = self.img_norm(image=image)
+            # print("img_a:", norm_img['image'][0].min(),norm_img['image'][0].max())
 
             if self.depth_channel:
                 mask = np.asarray(Image.open(self.mask_list[idx]))
+
+                # NOTE: this is the newly added remapping
+                mask = (mask-300)/(500-300)
+                mask = mask.clip(min=0, max=1) 
+                # print("mask_b:", mask.min(), mask.max())
+
                 norm_mask = self.mask_norm(image=mask)
+                # print("mask_a: {:.5f} {:.5f}".format(norm_mask['image'].min(),norm_mask['image'].max()))
                 norm_mask = np.expand_dims(norm_mask['image'], axis=-1)
 
                 # Concatenate into a 4 channel input
@@ -59,6 +74,9 @@ class KeypointsDataset(Dataset):
                 data = self.transform(image=combined_image, keypoints=keypoints)
             else:
                 data = self.transform(image=norm_img['image'], keypoints=keypoints)
+
+            # print("other transforms image", data['image'][0].min(),data['image'][0].max())
+            # print("other transforms image", data['image'][3].min(),data['image'][3].max())
 
             if not data['keypoints']:
                 print('Empty keypoint')
@@ -151,6 +169,7 @@ def inverse_normalize(tensor, mean, std):
     for t, m, s in zip(tensor, mean, std):
             t.mul_(s).add_(m)
             return tensor
+
 
 def main():
 

@@ -9,8 +9,8 @@ from albumentations.pytorch.transforms import ToTensorV2
 import numpy as np
 from PIL import Image
 import utils
-
-
+import cv2
+import matplotlib.pyplot as plt
 
 
 from PIL import ImageFile
@@ -27,7 +27,7 @@ class Transforms:
 
 class DepthTransform(Dataset):
     def __init__(self, img_path, transform):
-        self.transforms = transforms.Compose([Transforms(transform), transforms.ToTensor()])
+        self.transforms = A.Compose([A.Crop(x_min=345, y_min=365, x_max=1120, y_max=1000)]) #
         self.img_list,__ = utils.list_files(img_path, ".png")
 
     def __len__(self):
@@ -35,10 +35,32 @@ class DepthTransform(Dataset):
 
     def __getitem__(self, idx):
         img = np.asarray(Image.open(self.img_list[idx]))
-        img = ((img-300))/((500-300))
+        # print(img.min(), img.max())
+        img = (img-300)/(500-300)
         img = img.clip(min=0, max=1)
-        data = self.transforms(img)
-        return data
+        # print(img)
+        data = self.transforms(image=img)
+        # print(data['image'])
+        # print(data['image'][0].min(),data['image'][0].max())
+        return data['image']
+
+# NOTE: this to test if the albumentations also remaps to 0-1
+# class DepthTransform(Dataset):
+#     def __init__(self, img_path, transform):
+#         self.transforms = A.Compose([A.Crop(x_min=345, y_min=365, x_max=1120, y_max=1000), ToTensorV2()])
+#         self.img_list,__ = utils.list_files(img_path, ".png")
+
+#     def __len__(self):
+#         return len(self.img_list)
+
+#     def __getitem__(self, idx):
+#         image = cv2.imread(self.img_list[idx])
+#         print(image.min(), image.max())
+#         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+#         image = image/255
+#         data = self.transforms(image=image)
+#         print(data['image'][0].min(),data['image'][0].max())
+#         return data['image']
 
 if __name__ == "__main__":
 
@@ -76,15 +98,33 @@ if __name__ == "__main__":
     print(mean)
     print(std)
 
+    # NOTE: this to test if the albumentations also remaps to 0-1
+    # mean = 0.
+    # std = 0.
+    # nb_samples = 0
+    # for data in depth_loader:
+    #     batch_samples = data.size(0)
+    #     data = data.view(batch_samples, data.size(1), -1)
+    #     data_float = data.type(torch.FloatTensor)
+    #     mean += data_float.mean(2).sum(0)
+    #     std += data_float.std(2).sum(0)
+    #     nb_samples += batch_samples
+
+    # mean /= nb_samples
+    # std /= nb_samples
+    # print("\nDepth:")
+    # print(mean)
+    # print(std)
+
     mean = 0.
     std = 0.
     nb_samples = 0
     for data in depth_loader:
         batch_samples = data.size(0)
-        data = data.view(batch_samples, data.size(1), -1)
+        data = data.view(batch_samples, -1)
         data_float = data.type(torch.FloatTensor)
-        mean += data_float.mean(2).sum(0)
-        std += data_float.std(2).sum(0)
+        mean += data_float.mean(1).sum(0)
+        std += data_float.std(1).sum(0)
         nb_samples += batch_samples
 
 

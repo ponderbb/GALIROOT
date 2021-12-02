@@ -77,4 +77,4 @@ The predictions (blue) and ground truth (red) of the stem labels plotted onto th
 ![inference on test images](models/resnet18_2911_1033/inf_resnet18_2911_1033.png)
 
 
-[^1]: still dealing with some tensor conversion issues
+[^1]: in two instances (marked by BUG) it throws an error for `.to(device)` -> `#to.(device)`

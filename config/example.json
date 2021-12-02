@@ -44,6 +44,7 @@
         "epochs": 20,
         "kfold": 5,
         "patience": 5,
-        "delta": 1e-4
+        "delta": 1e-4,
+        "depth": true
     }
 }

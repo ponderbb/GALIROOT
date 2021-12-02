@@ -67,7 +67,7 @@ class SelfNet(nn.Module):
         x = self.pool(F.relu(self.norm4(self.conv4(x))))
         x = self.pool(F.relu(self.norm5(self.conv5(x))))
 
-        # Prep for linear layer / Flatten
+# Prep for linear layer / Flatten
         x = x.reshape(x.shape[0], -1)
 
         # linear layers with dropout in between 

@@ -33,8 +33,8 @@ def inference(config, loss_dictionary, device):
     prediction_list = []
     ground_truth_list = []
     for data in data_load:
-        image = data['image'].to(device)
-        keypoints = torch.mul(data['keypoints'],256)
+        image = data['image'].to(device) # BUG: throws an error when run individually (comment it out)
+        keypoints = torch.mul(data['keypoints'],255)
         prediction = torch.mul(model(image), 255)
         keypoints_np = [int(x) for x in keypoints.cpu().detach().numpy()[0][0]]
         prediction_np = [int(x) for x in prediction.cpu().detach().numpy()[0]]
@@ -103,11 +103,11 @@ def inference(config, loss_dictionary, device):
         eucledian_dist = 0
         plt.subplot(4,5,idx+1)
         plt.axis('off')
-        image = data['image'].to(device)
-        keypoints = torch.mul(data['keypoints'],256)
+        image = data['image'].to(device) # BUG: throws an error when run individually (comment it out)
+        keypoints = torch.mul(data['keypoints'],255)
         kp_np = [int(x) for x in keypoints.cpu().detach().numpy()[0][0]]
 
-        prediction = torch.mul(model(image), 256)
+        prediction = torch.mul(model(image), 255)
         pred_np = [int(x) for x in prediction.cpu().detach().numpy()[0]]
 
         eucledian_dist = np.sqrt(np.power(pred_np[0]-kp_np[0],2)+np.power(pred_np[1]-kp_np[1],2))

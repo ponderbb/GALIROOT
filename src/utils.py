@@ -56,7 +56,7 @@ def plot_kfold_losses(config, loss_dictionary):
     plt.xticks(range(1,config['training']['kfold']+1))
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig(config['folders']['out_folder']+f"fold_loss_{config['training']['checkpoint_name']}.png") # FIXME: from config
+    plt.savefig(config['folders']['out_folder']+f"fold_loss_{config['training']['checkpoint_name']}.png")
 
 
 
@@ -72,9 +72,11 @@ def vis_keypoints(image, keypoints, prediction, distance, mean):
     '''
     Visualizing keypoints on images.
     '''
-    image_denorm = loader.inverse_normalize(image,(0.3399, 0.3449, 0.1555),(0.1296, 0.1372, 0.1044))
-    image_denorm = image_denorm.mul_(255)
-    image_copy = image_denorm.cpu().squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
+    image = loader.inverse_normalize(tensor=image,mean=(0.3399, 0.3449, 0.1555),std=(0.1296, 0.1372, 0.1044))
+    image = torch.mul(image,255)
+    img_max = image[:,1,:,:].max()
+    img_min = image[:,1,:,:].min()
+    image_copy = image.cpu().squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
 
     border_image = make_border(image_copy,distance,mean)
 
