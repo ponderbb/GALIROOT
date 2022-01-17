@@ -111,7 +111,7 @@ def inference(config, loss_dictionary, device):
         pred_np = [int(x) for x in prediction.cpu().detach().numpy()[0]]
 
         eucledian_dist = np.sqrt(np.power(pred_np[0]-kp_np[0],2)+np.power(pred_np[1]-kp_np[1],2))
-        plt.text(0,300, f"Eucl. dist: {int(eucledian_dist)} pixels", color = (0,0,0), fontsize = 'xx-large')
+        plt.text(0,275, f"Eucl. dist: {int(eucledian_dist)} pixels", color = (0,0,0), fontsize = 'xx-large')
 
         image_copy = utils.vis_keypoints(image[:,:3,:,:], keypoints, prediction, eucledian_dist, mean_list)
         plt.imshow(image_copy)

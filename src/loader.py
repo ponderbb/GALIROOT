@@ -28,7 +28,7 @@ class KeypointsDataset(Dataset):
         self.images_list = images
         self.mask_list = masks
         self.transform = transform
-        self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044],max_pixel_value=1.0)])
+        self.img_norm = A.Compose([A.Normalize(mean=[0.3399, 0.3449, 0.1555], std=[0.1296, 0.1372, 0.1044],max_pixel_value=1.0), A.ColorJitter()])
         self.mask_norm = A.Compose([A.Normalize(mean=[0.7188], std=[0.1109],max_pixel_value=1.0)])
         self.depth_channel = depth
 
@@ -129,7 +129,8 @@ def generate_transform(config):
             train_transform.append(A.ChannelDropout())
 
         if add_augmentation['color_jitter']:
-            train_transform.append(A.ColorJitter())
+            # train_transform.append(A.ColorJitter())
+            print('add colorjitter') # FIXME: remove this
 
         if add_augmentation['vertical_flip']:
             train_transform.append(A.VerticalFlip())

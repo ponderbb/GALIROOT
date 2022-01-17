@@ -78,18 +78,18 @@ def vis_keypoints(image, keypoints, prediction, distance, mean):
     img_min = image[:,1,:,:].min()
     image_copy = image.cpu().squeeze().permute(1,2,0).numpy().copy() # get it back from the normalized state
 
-    border_image = make_border(image_copy,distance,mean)
+    # border_image = make_border(image_copy,distance,mean)
 
     keypoints = keypoints.cpu().detach().numpy()
     prediction = prediction.cpu().detach().numpy()
 
     for kp, pred in zip(keypoints[0].astype('uint8'),prediction.astype('uint8')):
-        cv2.circle(border_image, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
-        cv2.circle(border_image, (int(pred[0]), int(pred[1])), 5, (0,0,255), -1)
-        cv2.line(border_image, kp, pred, (255, 255, 255),thickness=1, lineType=1)
+        cv2.circle(image_copy, (int(kp[0]), int(kp[1])), 5, (255,0,0), -1)
+        cv2.circle(image_copy, (int(pred[0]), int(pred[1])), 5, (0,0,255), -1)
+        cv2.line(image_copy, kp, pred, (255, 255, 255),thickness=1, lineType=1)
 
 
-    return border_image.astype('uint8')
+    return image_copy.astype('uint8')
 
 def normal_dist(x , mean , sd, device):
     # x = x.detach().cpu()
