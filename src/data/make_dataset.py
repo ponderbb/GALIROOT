@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
-from filecmp import cmp
-
-import logging
-import sys
-from typing import Callable, Tuple, Union, Optional, List, Any
-from email.policy import default
-from pathlib import Path
-import numpy as np
-from PIL import Image
 import json
+import logging
 import os
+import sys
+from pathlib import Path
+from typing import Any, Tuple
 
 import click
+import numpy as np
 from dotenv import find_dotenv, load_dotenv
+from PIL import Image
 from tqdm import tqdm
 
 sys.path.append("src")
@@ -87,39 +83,38 @@ class ProcessRawData:
 
         rgb_img = np.asarray(Image.open(rgb_path))
 
-        return rgb_img # HxWxC
+        return rgb_img  # HxWxC
 
     @staticmethod
     def _get_depth(depth_path: str) -> Any:
 
-        depth_img = np.asarray(Image.open(depth_path)) # HxW
+        depth_img = np.asarray(Image.open(depth_path))  # HxW
 
-        #FIXME: do remapping and normalization here?
+        # FIXME: do remapping and normalization here?
 
         depth_img = np.expand_dims(depth_img, axis=-1)
 
-        return depth_img # HxWxC
+        return depth_img  # HxWxC
 
     @staticmethod
     def _get_annotation(annotation_path: str) -> Any:
 
-        keypoint_mask = np.zeros((1080,1920))
+        keypoint_mask = np.zeros((1080, 1920))
 
-        with open(annotation_path, 'rb') as j:
+        with open(annotation_path, "rb") as j:
             annotation = json.load(j)
-        if not annotation['objects']:
+        if not annotation["objects"]:
             pass
         else:
-            keypoint_list = annotation['objects'][0]['points']['exterior']
+            keypoint_list = annotation["objects"][0]["points"]["exterior"]
 
             for keypoint in keypoint_list:
-                #TODO: possibility to di ot with a wider kernel?
+                # TODO: possibility to di ot with a wider kernel?
                 keypoint_mask[keypoint[0], keypoint[1]] = 1
 
             keypoint_mask = np.expand_dims(keypoint_mask, axis=-1)
             # plt.imsave("keypoint_mask.png", keypoint_mask)
             return keypoint_mask
-
 
     def _write_to_npy(self):
         """
@@ -130,19 +125,13 @@ class ProcessRawData:
         """
 
         for idx in tqdm(range(self.length)):
-            rgb = self._get_rgb(self.path_dict['rgb'][idx])
-            depth = self._get_depth(self.path_dict['depth'][idx])
-            annotation = self._get_annotation(self.path_dict['annotation'][idx])
+            rgb = self._get_rgb(self.path_dict["rgb"][idx])
+            depth = self._get_depth(self.path_dict["depth"][idx])
+            annotation = self._get_annotation(self.path_dict["annotation"][idx])
 
             combined = np.concatenate((rgb, depth, annotation), axis=-1)
 
-            np.save(os.path.join(self.output,f"{idx}.npy"), combined)
-
-
-        
-
-        
-
+            np.save(os.path.join(self.output, f"{idx}.npy"), combined)
 
 
 @click.command()
@@ -167,10 +156,7 @@ def main(input_filepath, output_filepath, annotation_filepath):
     prd._annotation_collector()
     prd._path_list_cleaner()
     logger.info(f"{len(prd.path_dict['rgb'])} datapoints remaining after cleaning")
-    # prd._get_annotation(prd.path_dict['annotation'][0])
     prd._write_to_npy()
-
-    print("done")
 
 
 if __name__ == "__main__":
