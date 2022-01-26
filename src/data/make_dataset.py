@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import logging
-from pathlib import Path
-import os
 import glob
+import logging
+import os
+from pathlib import Path
 
 import click
 from dotenv import find_dotenv, load_dotenv
 
-from src.data.raw_to_interim import RawToInterim
 from src.data.mean_std_dataset import calculate_mean_std
+from src.data.raw_to_interim import RawToInterim
 
 
 @click.command()
@@ -42,12 +42,13 @@ def main(input_filepath, interim_filepath, output_filepath, annotation_filepath)
         r2i._write_to_npy()
 
     else:
-        
+
         logger.info("interim already exists")
 
     mean_std_dict = calculate_mean_std(interim_filepath)
 
     print(mean_std_dict)
+
 
 if __name__ == "__main__":
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

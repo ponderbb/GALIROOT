@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import sys
 from pathlib import Path
 from typing import Any, Tuple
 
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-
-from timeit import timeit
 
 from src import utils
 
