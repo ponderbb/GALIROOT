@@ -2,11 +2,14 @@ from typing import Dict, Tuple
 
 import albumentations as A
 import numpy as np
+import os
+import pickle
 import torch
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 from src import utils
+
 
 
 class MeanStdDataset(Dataset):
@@ -90,12 +93,20 @@ def calculate_mean_std(input_path: str) -> Dict:
     depth_mean /= nb_samples
     depth_std /= nb_samples
 
-    return {
-        "rgb_mean": rgb_mean.numpy(),
-        "rgb_std": rgb_std.numpy(),
-        "depth_mean": depth_mean.numpy(),
-        "depth_std": depth_std.numpy(),
-    }
+    out_dict = {"rgb_mean": list(rgb_mean.numpy()),
+                   "rgb_std": list(rgb_std.numpy()),
+                   "depth_mean": round(float(depth_mean.numpy()),8),
+                   "depth_std": round(float(depth_std.numpy()),8),
+                   }
+
+    with open(os.path.join(input_path, "mean_std.pickle"), "wb") as outfile:
+        pickle.dump(out_dict, outfile)
+
+    return out_dict
+
+def load_mean_std(input_path: str) -> Dict:
+    with open(os.path.join(input_path, "mean_std.pickle"), "rb") as infile:
+        return pickle.load(infile)
 
 
 def main():

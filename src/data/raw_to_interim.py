@@ -28,6 +28,7 @@ class RawToInterim:
         self.input = input_filepath
         self.output = output_filepath
         self.annotation = annotation_filepath
+        self.ann_stem_list = []
         self.img_format = ".png"
         self.ann_format = ".json"
         self.path_dict = {}  # TODO: naming convention change?
@@ -51,36 +52,16 @@ class RawToInterim:
         self.path_dict.update(rgb=rgb_list, depth=depth_list)
 
     def _annotation_collector(self):
-        ann_list = utils.list_files(self.annotation, self.ann_format)
-        self.path_dict.update(annotation=ann_list)
-
-    def _path_list_cleaner(self):
         """
         The image names contain a unique 19 digit code for each image.
 
         TODO: change annotation selection method
 
         The json file are only included in case the image is annotated (stem is definable).
-
-        Therefore both the depth and rgb image's ID is checked against the annotations ID.
         """
-
-        print("Creating annotation list")
-        ann_stem_list = []
-        for annotation in tqdm(self.path_dict["annotation"]):
-            ann_stem_list.append(str(Path(annotation).stem)[-19:])
-
-        print("Cleaning rgb list")
-        for rgb in tqdm(self.path_dict["rgb"]):
-            if str(Path(rgb).stem)[-19:] not in ann_stem_list:
-                self.path_dict["rgb"].remove(rgb)
-
-        print("Cleaning depth list")
-        for depth in tqdm(self.path_dict["depth"]):
-            if str(Path(depth).stem)[-19:] not in ann_stem_list:
-                self.path_dict["depth"].remove(depth)
-
-        self.length = len(ann_stem_list)
+        self.path_dict.update(annotation=utils.list_files(self.annotation, self.ann_format))
+        self.ann_stem_list = [str(Path(annotation).stem)[-19:] for annotation in self.path_dict['annotation']]
+        self.length = len(self.ann_stem_list)
 
     @staticmethod
     def _get_rgb(rgb_path: str) -> Any:
@@ -101,6 +82,8 @@ class RawToInterim:
     @staticmethod
     def _get_annotation(annotation_path: str) -> Any:
 
+        tolerance = 10 #FIXME: define this in config, responsile for dilation of root annotation
+
         keypoint_mask = np.zeros((1080, 1920), dtype="uint8")
 
         with open(annotation_path, "rb") as j:
@@ -112,7 +95,9 @@ class RawToInterim:
 
             for keypoint in keypoint_list:
                 # TODO: possibility to di ot with a wider kernel?
-                keypoint_mask[keypoint[0], keypoint[1]] = 1
+                for x in range(keypoint[1]-tolerance, keypoint[1]+tolerance):
+                    for y in range(keypoint[0]-tolerance, keypoint[0]+tolerance):
+                        keypoint_mask[x,y] = 1
 
             keypoint_mask = np.expand_dims(keypoint_mask, axis=-1)
             # plt.imsave("keypoint_mask.png", keypoint_mask)
@@ -128,10 +113,17 @@ class RawToInterim:
         FIXME: for some reason, the combining and saving is super slow
         """
 
-        for idx in tqdm(range(self.length)):
-            rgb = self._get_rgb(self.path_dict["rgb"][idx])
-            depth = self._get_depth(self.path_dict["depth"][idx])
-            annotation = self._get_annotation(self.path_dict["annotation"][idx])
+        for idx, ann_id in enumerate(tqdm(self.ann_stem_list)):
+
+            # finding the instances from the list with matching id
+            rgb_path = list(filter(lambda x: ann_id in x, self.path_dict["rgb"]))[0]
+            depth_path = list(filter(lambda x: ann_id in x, self.path_dict["depth"]))[0]
+            annotation_path = list(filter(lambda x: ann_id in x, self.path_dict["annotation"]))[0]
+
+            # loading the images and mask(s)
+            rgb = self._get_rgb(rgb_path)
+            depth = self._get_depth(depth_path)
+            annotation = self._get_annotation(annotation_path)
 
             combined = np.concatenate((rgb, depth, annotation), axis=-1)
 

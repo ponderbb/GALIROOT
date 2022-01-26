@@ -7,7 +7,7 @@ from pathlib import Path
 import click
 from dotenv import find_dotenv, load_dotenv
 
-from src.data.mean_std_dataset import calculate_mean_std
+from src.data.mean_std_dataset import calculate_mean_std, load_mean_std
 from src.data.raw_to_interim import RawToInterim
 
 
@@ -37,18 +37,22 @@ def main(input_filepath, interim_filepath, output_filepath, annotation_filepath)
 
         r2i._image_collector()
         r2i._annotation_collector()
-        r2i._path_list_cleaner()
-        logger.info(f"{len(r2i.path_dict['rgb'])} datapoints remaining after cleaning")
+        logger.info(f"{r2i.length} datapoints with annotation")
         r2i._write_to_npy()
 
     else:
 
         logger.info("interim already exists")
 
-    mean_std_dict = calculate_mean_std(interim_filepath)
+
+    if not glob.glob(f"{interim_filepath}*.pickle"):
+        logger.info("calculating mean and std values for the dataset")
+        mean_std_dict = calculate_mean_std(interim_filepath)
+    else:
+        logger.info("loading mean and std values for the dataset")
+        mean_std_dict = load_mean_std(interim_filepath)
 
     print(mean_std_dict)
-
 
 if __name__ == "__main__":
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
