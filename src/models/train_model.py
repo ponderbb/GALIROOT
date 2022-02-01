@@ -11,8 +11,10 @@ import wandb
 class MyLittleLightningModule(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.model = smp.UnetPlusPlus("resnet34",encoder_weights=None,in_channels=4, classes=1)
-        self.loss = smp.losses.DiceLoss('binary')
+        self.model = smp.UnetPlusPlus(
+            "resnet34", encoder_weights=None, in_channels=4, classes=1
+        )
+        self.loss = smp.losses.DiceLoss("binary")
 
     def training_step(self, batch, batch_idx):
         rgb, depth, mask1 = batch
@@ -27,7 +29,10 @@ class MyLittleLightningModule(pl.LightningModule):
         combined = torch.cat((rgb, depth), dim=1)
         logits = self.model(combined)
         loss = self.loss(logits, mask1)
-        plt.imsave("src/visualization/image_tests/logits.png", logits[0,:,:,:].cpu().squeeze(0).numpy())
+        plt.imsave(
+            "src/visualization/image_tests/logits.png",
+            logits[0, :, :, :].cpu().squeeze(0).numpy(),
+        )
         self.log("val_loss", loss)
 
     def configure_optimizers(self):
@@ -40,9 +45,9 @@ def main():
 
     dm = MyLittleDataModule()
     model = MyLittleLightningModule()
-    trainer = pl.Trainer(gpus=1,
-                         logger = WandbLogger(project="GALIROOT"),
-                         log_every_n_steps = 5)
+    trainer = pl.Trainer(
+        gpus=1, logger=WandbLogger(project="GALIROOT"), log_every_n_steps=5
+    )
     trainer.fit(model, dm)
 
 

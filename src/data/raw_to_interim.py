@@ -94,9 +94,7 @@ class RawToInterim:
 
     def _get_annotation(self, annotation_path: str) -> Any:
 
-        kernel_width = self.config[
-            "kernel_size"
-        ]
+        kernel_width = self.config["kernel_size"]
 
         keypoint_mask = np.zeros((1080, 1920), dtype="uint8")
 

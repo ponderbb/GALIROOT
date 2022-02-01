@@ -26,7 +26,11 @@ class RGBDDataset(Dataset):
         if self.transform:
             transformed = self.transform(image=rgb, masks=[depth, mask1])
             rgb, depth, mask1 = self._disassemble_transform(transformed)
-        return rgb.transpose(2,0,1), depth.transpose(2,0,1), mask1.transpose(2,0,1)
+        return (
+            rgb.transpose(2, 0, 1),
+            depth.transpose(2, 0, 1),
+            mask1.transpose(2, 0, 1),
+        )
         # return rgb, torch.from_numpy(depth.transpose(2, 0, 1)), torch.from_numpy(mask1.transpose(2, 0, 1)) # FIXME: issue ith ToTensorV2
 
     @staticmethod
