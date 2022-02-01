@@ -1,0 +1,13 @@
+# pixel-level augmentations
+gaussian_blur: True
+color_jitter: True
+channel_dropout: False
+
+# spatial-level augmentations
+horizontal_flip: False
+vertical_flip: False
+shift_scale_rotate:
+  apply: True
+  scale_limit: [-0.2, 0.2]
+  rotate_limit: [-180, 180]
+  p: 1.0

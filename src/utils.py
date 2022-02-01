@@ -1,4 +1,10 @@
 import os
+import random
+from typing import Dict
+
+import numpy as np
+import torch
+import yaml
 
 
 def list_files(directory: str, fileformat: str) -> list:
@@ -8,3 +14,15 @@ def list_files(directory: str, fileformat: str) -> list:
             if name.endswith(fileformat):
                 path_list.append(os.path.join(root, name))
     return sorted(path_list)
+
+
+def load_config(path: str) -> Dict:
+    with open(path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+
+def set_seed(num: int):
+    torch.manual_seed(num)
+    random.seed(num)
+    np.random.seed(num)

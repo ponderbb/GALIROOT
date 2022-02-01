@@ -1,0 +1,20 @@
+# defining the rgb extremes
+x_min: 345
+x_max: 1120
+y_min: 365
+y_max: 1000
+
+# definfing the depth cutoff limits
+z_min: 400
+z_max: 500
+
+# specific for stem detection
+kernel_size: 10
+
+# feature image size
+size: 256
+
+# define parameters for loading
+annotation_format: ".json"
+image_format: ".png"
+ms_batch_size: 6

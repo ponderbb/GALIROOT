@@ -29,6 +29,10 @@ requirements: test_environment
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
 
+## Clean datafolders
+clean_data:
+	$(PYTHON_INTERPRETER) src/data/clean_data_folders.py
+
 ## Delete all compiled Python files
 clean:
 	find . -type f -name "*.py[co]" -delete
@@ -36,9 +40,9 @@ clean:
 
 ## Lint using flake8
 lint:
-	flake8 src
-	black src
-	isort src
+	flake8 --exit-zero src/
+	black src/
+	isort src/
 
 ## Upload Data to S3
 sync_data_to_s3:
