@@ -96,7 +96,7 @@ class RawToInterim:
 
         kernel_width = self.config[
             "kernel_size"
-        ]  # FIXME: define this in config, responsile for dilation of root annotation
+        ]
 
         keypoint_mask = np.zeros((1080, 1920), dtype="uint8")
 
@@ -125,8 +125,6 @@ class RawToInterim:
         0:2 -> RGB image
         3 -> depth image
         4 -> keypoint annotation
-
-        FIXME: for some reason, the combining and saving is super slow
         """
 
         self._image_collector()

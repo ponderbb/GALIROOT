@@ -1,8 +1,9 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import albumentations as A
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset, random_split
 
@@ -24,14 +25,15 @@ class RGBDDataset(Dataset):
         rgb, depth, mask1 = self._disassemble(data.astype("float32"))
         if self.transform:
             transformed = self.transform(image=rgb, masks=[depth, mask1])
-            self._disassemble_transform(transformed)
-        return rgb, depth, mask1
+            rgb, depth, mask1 = self._disassemble_transform(transformed)
+        return rgb.transpose(2,0,1), depth.transpose(2,0,1), mask1.transpose(2,0,1)
+        # return rgb, torch.from_numpy(depth.transpose(2, 0, 1)), torch.from_numpy(mask1.transpose(2, 0, 1)) # FIXME: issue ith ToTensorV2
 
     @staticmethod
     def _disassemble(data) -> Tuple:
         rgb = data[:, :, 0:3]
-        depth = data[:, :, 3]
-        mask1 = data[:, :, 4]
+        depth = np.expand_dims(data[:, :, 3], axis=-1)
+        mask1 = np.expand_dims(data[:, :, 4], axis=-1)
         return rgb, depth, mask1
 
     @staticmethod
@@ -61,7 +63,7 @@ class MyLittleDataModule(pl.LightningDataModule):
         self.train_split = train_split
         self.transform = generate_transform(transform_config)
 
-    def setup(self):
+    def setup(self, stage: Optional[str] = None):
         self.data_full = RGBDDataset(self.data_dir, self.transform)
         self.data_train, self.data_valid, self.data_test = random_split(
             self.data_full,
@@ -69,19 +71,21 @@ class MyLittleDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self.data_train, batch_size=self.batch_size)
+        return DataLoader(self.data_train, batch_size=self.batch_size, num_workers=4)
 
     def val_dataloader(self):
-        return DataLoader(self.data_valid, batch_size=self.batch_size)
+        return DataLoader(self.data_valid, batch_size=self.batch_size, num_workers=4)
 
     def test_dataloader(self):
-        return DataLoader(self.data_test, batch_size=self.batch_size)
+        return DataLoader(self.data_test, batch_size=self.batch_size, num_workers=4)
 
     def predict_dataloader(self):
-        return DataLoader(self.data_test, batch_size=self.batch_size)
+        return DataLoader(self.data_test, batch_size=self.batch_size, num_workers=4)
 
 
 def main():
+
+    # TODO: testing delete
 
     utils.set_seed(42)
     dm = MyLittleDataModule()

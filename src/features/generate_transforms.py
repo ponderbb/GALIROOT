@@ -1,4 +1,5 @@
 import albumentations as A
+from albumentations.pytorch.transforms import ToTensorV2
 
 from src import utils
 
@@ -30,5 +31,7 @@ def generate_transform(config_path: str) -> A.Compose:
 
     if config["gaussian_blur"]:
         transform.append(A.GaussianBlur())
+
+    # transform.append(ToTensorV2(transpose_mask=True))
 
     return A.Compose(transform)

@@ -91,3 +91,8 @@ target/
 
 # old files
 OLD/
+wandb/
+lightning_logs/
+src/visualization/image_tests/
+None/ 
+.flake8
