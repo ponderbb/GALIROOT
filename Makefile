@@ -27,7 +27,12 @@ requirements: test_environment
 
 ## Make Dataset
 data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+	$(PYTHON_INTERPRETER) src/data/make_dataset.py \
+		data/raw/ \
+		data/interim/ \
+		data/processed/ \
+		data/raw/root_annotations/ \
+		src/data/data_config.yml
 
 ## Clean datafolders
 clean_data:

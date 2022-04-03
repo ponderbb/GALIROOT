@@ -27,7 +27,8 @@ class InterimToProcessed:
                     self.config["y_max"],
                 ),
                 A.Resize(self.config["size"], self.config["size"]),
-            ]
+            ],
+            keypoint_params=A.KeypointParams(format="xy"),
         )
 
     def write_to_npy(self):
@@ -39,14 +40,18 @@ class InterimToProcessed:
             # normalization for rgb and depth (tensor)
             rgb, depth, mask = self._normalize(data)
 
+            keypoints = self.mask_to_keypoint(mask)
+
             # cropping to ROI and convert to (tensor -> numpy)
-            cropped = self.transforms(image=rgb, masks=[depth, mask])
+            cropped = self.transforms(image=rgb, mask=depth, keypoints=keypoints)
+
+            mask = self._keypoint_to_mask(cropped["keypoints"])
 
             combined = np.concatenate(
                 (
                     cropped["image"],
-                    np.expand_dims(cropped["masks"][0], axis=-1),
-                    np.expand_dims(cropped["masks"][1], axis=-1),
+                    np.expand_dims(cropped["mask"], axis=-1),
+                    np.expand_dims(mask, axis=-1),
                 ),
                 axis=-1,
             )
@@ -86,6 +91,28 @@ class InterimToProcessed:
                 )
             ]
         )
+
+    @staticmethod
+    def mask_to_keypoint(mask: Any):
+        y_list = np.where(mask == 1)[0]
+        x_list = np.where(mask == 1)[1]
+
+        keypoints = []
+
+        for y, x in zip(y_list, x_list):
+            keypoints.append((x.astype('float32'), y.astype('float32')))
+
+        return keypoints
+
+    def _keypoint_to_mask(self, keypoints: list):
+        keypoint_mask = np.zeros(
+            (self.config["size"], self.config["size"]), dtype="float32"
+        )
+        for keypoint in keypoints:
+            keypoint_mask[
+                round(keypoint[1]), round(keypoint[0])
+            ] = 1  # NOTE: losing accuracy on the keypoint
+        return keypoint_mask
 
 
 def main():

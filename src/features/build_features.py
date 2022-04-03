@@ -1,14 +1,15 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import albumentations as A
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset, random_split
+import torch
 
 from src import utils
 from src.features.generate_transforms import generate_transform
+from src.data.interim_to_processed import InterimToProcessed
 
 
 class RGBDDataset(Dataset):
@@ -23,15 +24,24 @@ class RGBDDataset(Dataset):
     def __getitem__(self, idx):
         data = np.load(self.input_list[idx])
         rgb, depth, mask1 = self._disassemble(data.astype("float32"))
-        if self.transform:
-            transformed = self.transform(image=rgb, masks=[depth, mask1])
-            rgb, depth, mask1 = self._disassemble_transform(transformed)
+
+        # NOTE: under construction
+        keypoints = InterimToProcessed.mask_to_keypoint(mask1)
+
+        if len(keypoints) == 0:
+            print(f"empty keypoint on {self.input_list[idx]}")        
+
+        transformed = self.transform(image=rgb, mask = depth, keypoints = keypoints)
+        # rgb, depth, keypoints = self._disassemble_transform(transformed)
+
         return (
-            rgb.transpose(2, 0, 1),
-            depth.transpose(2, 0, 1),
-            mask1.transpose(2, 0, 1),
+            transformed['image'].transpose(2, 0, 1),
+            transformed['mask'].transpose(2, 0, 1),
+            torch.from_numpy(np.asarray(transformed['keypoints']))
         )
-        # return rgb, torch.from_numpy(depth.transpose(2, 0, 1)), torch.from_numpy(mask1.transpose(2, 0, 1)) # FIXME: issue ith ToTensorV2
+
+    def new_method(self):
+        pass
 
     @staticmethod
     def _disassemble(data) -> Tuple:
@@ -42,7 +52,7 @@ class RGBDDataset(Dataset):
 
     @staticmethod
     def _disassemble_transform(transformed) -> List:
-        return transformed["image"], transformed["masks"][0], transformed["masks"][1]
+        return transformed["image"], transformed["mask"], transformed['keypoints']
 
     def calculate_splits(self, train_percentage: float = 0.8) -> Tuple:
         train_size = round(self.item_length * train_percentage)

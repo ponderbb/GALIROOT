@@ -9,7 +9,7 @@ z_min: 400
 z_max: 500
 
 # specific for stem detection
-kernel_size: 0
+kernel_size: 10
 
 # feature image size
 size: 256

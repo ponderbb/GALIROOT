@@ -59,6 +59,10 @@ class RawToInterim:
 
         self.path_dict.update(rgb=rgb_list, depth=depth_list)
 
+        # Image size definition for keypoint mask generation
+        rgb_image = self._get_rgb(rgb_list[0])
+        self.image_shape = rgb_image.shape
+
     def _annotation_collector(self):
         """
         The image names contain a unique 19 digit code for each image.
@@ -79,7 +83,9 @@ class RawToInterim:
     @staticmethod
     def _get_rgb(rgb_path: str) -> Any:
 
-        rgb_img = np.asarray(Image.open(rgb_path))
+        rgb_img = np.asarray(
+            Image.open(rgb_path)
+        )  # FIXME: transition to opencv for HSV
 
         return rgb_img  # HxWxC
 
@@ -96,7 +102,9 @@ class RawToInterim:
 
         kernel_width = self.config["kernel_size"]
 
-        keypoint_mask = np.zeros((1080, 1920), dtype="uint8")
+        keypoint_mask = np.zeros(
+            (self.image_shape[0], self.image_shape[1]), dtype="uint8"
+        )
 
         with open(annotation_path, "rb") as j:
             annotation = json.load(j)
@@ -107,14 +115,20 @@ class RawToInterim:
 
             for keypoint in keypoint_list:
                 # TODO: possibility to do it with a wider/circular kernel?
-                for x in range(keypoint[1] - kernel_width, keypoint[1] + kernel_width):
-                    for y in range(
-                        keypoint[0] - kernel_width, keypoint[0] + kernel_width
+                # FIXME: remove this is rollback to keypoint detection
+                if kernel_width != 0:
+                    for x in range(
+                        keypoint[1] - kernel_width, keypoint[1] + kernel_width
                     ):
-                        keypoint_mask[x, y] = 1
+                        for y in range(
+                            keypoint[0] - kernel_width, keypoint[0] + kernel_width
+                        ):
+                            keypoint_mask[x, y] = 1
+                else:
+                    keypoint_mask[keypoint[1], keypoint[0]] = 1
 
             keypoint_mask = np.expand_dims(keypoint_mask, axis=-1)
-            # plt.imsave("keypoint_mask.png", keypoint_mask)
+
             return keypoint_mask
 
     def write_to_npy(self):

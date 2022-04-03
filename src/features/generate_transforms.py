@@ -1,5 +1,4 @@
 import albumentations as A
-from albumentations.pytorch.transforms import ToTensorV2
 
 from src import utils
 
@@ -34,4 +33,4 @@ def generate_transform(config_path: str) -> A.Compose:
 
     # transform.append(ToTensorV2(transpose_mask=True))
 
-    return A.Compose(transform)
+    return A.Compose(transform, keypoint_params=A.KeypointParams(format='xy'))
